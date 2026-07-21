@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1a1c22">
+<title>Codex</title>
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14161b; --bg2:#191c22; --card:#1f232b; --card2:#252a33;
+    --line:#2e3540; --line2:#3a4250;
+    --ink:#e8eaef; --ink-soft:#aab2c0; --ink-dim:#7a828f;
+    --accent:#8fb9d9; --accent-ink:#0e1116; --accent-soft:#2a3a49;
+    --danger:#d98f8f; --ok:#8fd9a6; --warn:#d9c48f;
+    --r:16px; --r-sm:11px;
+    --sans:'Hanken Grotesk',system-ui,sans-serif;
+    --serif:'Fraunces',Georgia,serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:var(--sans); background:var(--bg); color:var(--ink);
+    font-size:15px; line-height:1.5; padding-bottom:96px;
+    padding-top:env(safe-area-inset-top);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:820px;margin:0 auto;padding:0 16px}
+
+  /* Header */
+  header{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,var(--bg) 70%,transparent);
+    padding:14px 0 8px;backdrop-filter:blur(6px)}
+  .hrow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .brand{font-family:var(--serif);font-weight:500;font-size:26px;letter-spacing:.3px;line-height:1}
+  .brand small{display:block;font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--ink-dim);margin-top:5px}
+  .htools{display:flex;gap:8px;align-items:center}
+  .iconbtn{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--card);
+    color:var(--ink-soft);display:grid;place-items:center;cursor:pointer;font-size:18px;flex:0 0 auto}
+  .iconbtn:active{background:var(--card2)}
+  .sync{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--ink-dim);
+    padding:4px 9px;border-radius:20px;border:1px solid var(--line);background:var(--card)}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--ink-dim)}
+  .sync.ok .dot{background:var(--ok)} .sync.busy .dot{background:var(--warn);animation:pulse 1s infinite}
+  .sync.err .dot{background:var(--danger)}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+  /* Search + filters */
+  .search{position:relative;margin:10px 0 8px}
+  .search input{width:100%;padding:12px 14px 12px 40px;border-radius:13px;border:1px solid var(--line);
+    background:var(--card);color:var(--ink);font-size:15px;font-family:var(--sans)}
+  .search input::placeholder{color:var(--ink-dim)}
+  .search .mag{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--ink-dim);font-size:16px}
+  .chips{display:flex;gap:7px;overflow-x:auto;padding:4px 0 6px;scrollbar-width:none;-ms-overflow-style:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:0 0 auto;padding:7px 13px;border-radius:20px;border:1px solid var(--line);background:var(--card);
+    color:var(--ink-soft);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+  .chip .n{color:var(--ink-dim);font-weight:600;margin-left:5px;font-size:11px}
+  .chip.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .chip.on .n{color:var(--accent-ink);opacity:.7}
+
+  /* List */
+  .grp{margin-top:14px}
+  .grp-h{font-family:var(--serif);font-size:15px;font-weight:600;color:var(--ink-soft);
+    letter-spacing:.3px;margin:0 4px 8px;display:flex;align-items:baseline;gap:8px}
+  .grp-h .c{font-family:var(--sans);font-size:11px;font-weight:600;color:var(--ink-dim)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 15px;
+    margin-bottom:9px;cursor:pointer;transition:border-color .15s}
+  .card:active{border-color:var(--line2);background:var(--card2)}
+  .card .top{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+  .card .nm{font-family:var(--serif);font-size:18px;font-weight:500;line-height:1.2}
+  .card .kap{font-family:var(--serif);font-size:22px;color:var(--accent);font-weight:500;flex:0 0 auto}
+  .card .snip{color:var(--ink-soft);font-size:13.5px;margin-top:6px;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.45}
+  .card .tags{margin-top:9px;display:flex;flex-wrap:wrap;gap:5px}
+  .tag{font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-soft);
+    padding:2px 8px;border-radius:20px}
+  .empty{text-align:center;color:var(--ink-dim);padding:60px 20px;font-size:14px}
+  .empty .big{font-family:var(--serif);font-size:20px;color:var(--ink-soft);margin-bottom:8px}
+
+  /* FAB */
+  .fab{position:fixed;right:max(18px,calc((100vw - 820px)/2 + 18px));bottom:calc(20px + env(safe-area-inset-bottom));
+    width:58px;height:58px;border-radius:19px;background:var(--accent);color:var(--accent-ink);border:none;
+    font-size:28px;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.4);display:grid;place-items:center;z-index:30}
+  .fab:active{transform:scale(.94)}
+
+  /* Sheet / modal */
+  .scrim{position:fixed;inset:0;background:rgba(8,9,12,.66);z-index:40;opacity:0;pointer-events:none;
+    transition:opacity .2s;backdrop-filter:blur(2px)}
+  .scrim.show{opacity:1;pointer-events:auto}
+  .sheet{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--bg2);
+    border-radius:22px 22px 0 0;border-top:1px solid var(--line);
+    max-width:820px;margin:0 auto;max-height:92vh;overflow-y:auto;
+    transform:translateY(100%);transition:transform .26s cubic-bezier(.2,.8,.2,1);
+    padding:6px 18px calc(24px + env(safe-area-inset-bottom))}
+  .sheet.show{transform:translateY(0)}
+  .grab{width:38px;height:4px;border-radius:4px;background:var(--line2);margin:8px auto 12px}
+  .sheet h2{font-family:var(--serif);font-weight:500;font-size:22px;margin:2px 0 16px}
+  .fld{margin-bottom:14px}
+  .fld label{display:block;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+    color:var(--ink-dim);margin-bottom:6px}
+  .fld input,.fld textarea,.fld select{width:100%;padding:11px 13px;border-radius:12px;border:1px solid var(--line);
+    background:var(--card);color:var(--ink);font-size:15px;font-family:var(--sans)}
+  .fld textarea{min-height:180px;resize:vertical;line-height:1.55}
+  .fld .hint{font-size:11.5px;color:var(--ink-dim);margin-top:5px}
+  .row2{display:flex;gap:10px}.row2>*{flex:1}
+  .btn{width:100%;padding:13px;border-radius:13px;border:none;font-size:15px;font-weight:700;
+    font-family:var(--sans);cursor:pointer}
+  .btn-p{background:var(--accent);color:var(--accent-ink)}
+  .btn-g{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+  .btn-d{background:transparent;color:var(--danger);border:1px solid var(--line)}
+  .btnrow{display:flex;gap:10px;margin-top:6px}
+
+  /* Detail */
+  .det-cat{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+  .det-nm{font-family:var(--serif);font-weight:500;font-size:27px;line-height:1.15;margin:6px 0 4px}
+  .det-tags{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
+  .det-body{margin-top:14px;color:var(--ink);font-size:15px;line-height:1.65}
+  .det-body p{margin:0 0 12px}
+  .det-body ul{margin:0 0 12px;padding-left:20px}
+  .det-body li{margin:0 0 6px}
+  .det-body em{color:var(--ink-soft);font-style:italic}
+
+  .set-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 0;
+    border-bottom:1px solid var(--line)}
+  .set-row:last-child{border-bottom:none}
+  .set-row .t{font-size:14px}.set-row .s{font-size:12px;color:var(--ink-dim);margin-top:2px}
+  .mini{padding:8px 14px;border-radius:10px;font-size:13px;font-weight:600;border:1px solid var(--line);
+    background:var(--card);color:var(--ink);cursor:pointer;flex:0 0 auto}
+  footer{text-align:center;color:var(--ink-dim);font-size:11px;padding:26px 0 8px}
+  .toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);
+    background:var(--card2);color:var(--ink);padding:11px 18px;border-radius:12px;border:1px solid var(--line2);
+    font-size:13.5px;font-weight:600;z-index:80;opacity:0;pointer-events:none;transition:.22s;max-width:90vw;text-align:center}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="hrow">
+    <div class="brand">Codex<small>Echo der Leere</small></div>
+    <div class="htools">
+      <span class="sync" id="syncPill"><span class="dot"></span><span id="syncTxt">…</span></span>
+      <button class="iconbtn" id="btnSettings" title="Einstellungen">⚙</button>
+    </div>
+  </div>
+  <div class="search">
+    <span class="mag">⌕</span>
+    <input id="q" type="search" placeholder="Suchen … Name, Text, Tag" autocomplete="off">
+  </div>
+  <div class="chips" id="chips"></div>
+</div></header>
+
+<main class="wrap" id="list"></main>
+
+<button class="fab" id="fab">+</button>
+
+<!-- Scrim + sheets -->
+<div class="scrim" id="scrim"></div>
+
+<div class="sheet" id="sheetEdit">
+  <div class="grab"></div>
+  <h2 id="edTitle">Neuer Eintrag</h2>
+  <div class="fld"><label>Name</label><input id="edName" placeholder="z. B. Adam Sorin"></div>
+  <div class="row2">
+    <div class="fld"><label>Kategorie</label>
+      <input id="edCat" list="catList" placeholder="Kategorie wählen/anlegen">
+      <datalist id="catList"></datalist>
+    </div>
+    <div class="fld" id="kapWrap" style="display:none">
+      <label>Kapitel-Nr.</label><input id="edKap" type="number" min="1" placeholder="1">
+    </div>
+  </div>
+  <div class="fld"><label>Tags</label><input id="edTags" placeholder="komma, getrennt">
+    <div class="hint">Optional. Zum Filtern &amp; schnellen Wiederfinden.</div></div>
+  <div class="fld"><label>Text</label>
+    <textarea id="edText" placeholder="Freitext. Zeilen mit „- “ werden als Liste dargestellt."></textarea>
+    <div class="hint">Markdown-leicht: „- “ = Aufzählung, Leerzeile = neuer Absatz.</div></div>
+  <div class="btnrow">
+    <button class="btn btn-p" id="edSave">Speichern</button>
+  </div>
+  <div class="btnrow"><button class="btn btn-d" id="edDelete" style="display:none">Löschen</button></div>
+</div>
+
+<div class="sheet" id="sheetDetail">
+  <div class="grab"></div>
+  <div id="detBody"></div>
+  <div class="btnrow" style="margin-top:18px">
+    <button class="btn btn-g" id="detEdit">Bearbeiten</button>
+    <button class="btn btn-g" id="detClose">Schließen</button>
+  </div>
+</div>
+
+<div class="sheet" id="sheetSettings">
+  <div class="grab"></div>
+  <h2>Einstellungen</h2>
+
+  <div class="set-row">
+    <div><div class="t">Cloud-Sync</div><div class="s" id="secState">Kein Schlüssel hinterlegt</div></div>
+    <button class="mini" id="btnSecret">Schlüssel</button>
+  </div>
+  <div class="set-row">
+    <div><div class="t">Jetzt synchronisieren</div><div class="s" id="lastSyncTxt">–</div></div>
+    <button class="mini" id="btnSyncNow">Sync</button>
+  </div>
+
+  <div style="height:12px"></div>
+  <h2 style="font-size:17px">Daten</h2>
+  <div class="set-row">
+    <div><div class="t">Lore exportieren (Markdown)</div><div class="s">Kanonische Datei fürs Projekt</div></div>
+    <button class="mini" id="btnExpMd">.md</button>
+  </div>
+  <div class="set-row">
+    <div><div class="t">Backup exportieren (JSON)</div><div class="s">Verlustfrei, alle Felder</div></div>
+    <button class="mini" id="btnExpJson">.json</button>
+  </div>
+  <div class="set-row">
+    <div><div class="t">Importieren</div><div class="s">.md oder .json</div></div>
+    <button class="mini" id="btnImp">Datei</button>
+  </div>
+  <input type="file" id="fileInput" accept=".md,.json,.txt" style="display:none">
+
+  <div style="height:14px"></div>
+  <div class="s" style="color:var(--ink-dim);font-size:12px;line-height:1.6">
+    Einträge: <b id="statCount">0</b> · Version <b id="verTxt"></b><br>
+    Sync-Pfad: <code>codex/data</code>
+  </div>
+  <footer>Codex · Echo der Leere · <span id="verFoot"></span></footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+const APP_VERSION='v0.1';
+const KV_BASE='https://kv-store.neuzcore.workers.dev';
+const KV_KEY='codex/data';
+const LS_DATA='codex_data';
+const LS_SECRET='codex_secret';
+const LS_SYNC='codex_lastsync';
+
+const CAT_ORDER=['Welt','Politik','Zeitleiste','Ereignisse','Organisationen','Personen','Orte','Technologie','Artefakte',"Ba'al",'Kapitel'];
+
+let state={entries:[]};
+let filterCat='';   // '' = alle
+let editingId=null;
+
+/* ---------- utils ---------- */
+const $=s=>document.querySelector(s);
+const $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const uid=()=>'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2000);}
+function catRank(c){const i=CAT_ORDER.indexOf(c);return i<0?CAT_ORDER.length+1:i;}
+
+/* ---------- markdown-light render ---------- */
+function mdToHtml(txt){
+  const lines=(txt||'').split('\n');let html='';let inList=false;let para=[];
+  const flushP=()=>{if(para.length){html+='<p>'+inline(para.join(' '))+'</p>';para=[];}};
+  const flushL=()=>{if(inList){html+='</ul>';inList=false;}};
+  for(let raw of lines){
+    const l=raw.trim();
+    if(l===''){flushP();flushL();continue;}
+    if(/^-\s+/.test(l)){flushP();if(!inList){html+='<ul>';inList=true;}html+='<li>'+inline(l.replace(/^-\s+/,''))+'</li>';}
+    else{flushL();para.push(l);}
+  }
+  flushP();flushL();return html;
+}
+function inline(s){s=esc(s);s=s.replace(/\*([^*]+)\*/g,'<em>$1</em>');return s;}
+
+/* ---------- persistence ---------- */
+function loadLocal(){try{const d=JSON.parse(localStorage.getItem(LS_DATA));if(d&&Array.isArray(d.entries))state=d;}catch(e){}}
+function saveLocal(){localStorage.setItem(LS_DATA,JSON.stringify(state));}
+async function save(){saveLocal();render();pushRemote();}
+
+/* ---------- cloud sync ---------- */
+function secret(){return localStorage.getItem(LS_SECRET)||'';}
+function setSync(cls,txt){const p=$('#syncPill');p.className='sync '+cls;$('#syncTxt').textContent=txt;}
+async function pullRemote(silent){
+  const s=secret();if(!s){setSync('','Lokal');return;}
+  setSync('busy','Sync…');
+  try{
+    const r=await fetch(`${KV_BASE}/${KV_KEY}`,{headers:{'Authorization':'Bearer '+s}});
+    if(r.status===404){ // leer -> lokale Daten hochladen
+      await pushRemote();setSync('ok','Synchron');return;
+    }
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const d=await r.json();
+    if(d&&Array.isArray(d.entries)){state=d;saveLocal();render();}
+    stamp();setSync('ok','Synchron');
+    if(!silent)toast('Aus der Cloud geladen');
+  }catch(e){setSync('err','Fehler');if(!silent)toast('Sync-Fehler: '+e.message);}
+}
+async function pushRemote(){
+  const s=secret();if(!s){setSync('','Lokal');return;}
+  setSync('busy','Sync…');
+  try{
+    state.version=1;state.app='codex';state.exported=new Date().toISOString();
+    const r=await fetch(`${KV_BASE}/${KV_KEY}`,{method:'PUT',
+      headers:{'Authorization':'Bearer '+s,'Content-Type':'application/json'},
+      body:JSON.stringify(state)});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    stamp();setSync('ok','Synchron');
+  }catch(e){setSync('err','Fehler');toast('Upload-Fehler: '+e.message);}
+}
+function stamp(){const t=new Date().toISOString();localStorage.setItem(LS_SYNC,t);renderLastSync();}
+function renderLastSync(){const t=localStorage.getItem(LS_SYNC);
+  $('#lastSyncTxt').textContent=t?('Zuletzt: '+new Date(t).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})):'Noch nie';}
+
+/* ---------- rendering ---------- */
+function catsInUse(){
+  const m=new Map();
+  for(const e of state.entries)m.set(e.kategorie,(m.get(e.kategorie)||0)+1);
+  return [...m.entries()].sort((a,b)=>catRank(a[0])-catRank(b[0])||a[0].localeCompare(b[0]));
+}
+function renderChips(){
+  const c=$('#chips');const cats=catsInUse();
+  let h=`<div class="chip ${filterCat===''?'on':''}" data-c="">Alle<span class="n">${state.entries.length}</span></div>`;
+  for(const [name,n] of cats)h+=`<div class="chip ${filterCat===name?'on':''}" data-c="${esc(name)}">${esc(name)}<span class="n">${n}</span></div>`;
+  c.innerHTML=h;
+  $$('#chips .chip').forEach(ch=>ch.onclick=()=>{filterCat=ch.dataset.c;renderChips();renderList();});
+}
+function currentFilter(){
+  const q=$('#q').value.trim().toLowerCase();
+  let items=state.entries.slice();
+  if(filterCat)items=items.filter(e=>e.kategorie===filterCat);
+  if(q)items=items.filter(e=>(e.name+' '+e.text+' '+(e.tags||[]).join(' ')+' '+e.kategorie).toLowerCase().includes(q));
+  return items;
+}
+function sortEntries(items){
+  return items.sort((a,b)=>{
+    const cr=catRank(a.kategorie)-catRank(b.kategorie);if(cr)return cr;
+    if(a.kategorie===b.kategorie&&a.kategorie==='Kapitel')return (a.kapitel||999)-(b.kapitel||999);
+    return a.name.localeCompare(b.name,'de');
+  });
+}
+function renderList(){
+  const items=sortEntries(currentFilter());
+  const el=$('#list');
+  if(!items.length){
+    el.innerHTML=`<div class="empty"><div class="big">Nichts gefunden</div>${state.entries.length?'Andere Suche oder Filter versuchen.':'Tippe auf „+“ oder importiere deine Lore-Datei über ⚙ → Importieren.'}</div>`;
+    return;
+  }
+  let h='';let lastCat=null;
+  for(const e of items){
+    if(!filterCat && e.kategorie!==lastCat){
+      lastCat=e.kategorie;
+      const n=items.filter(x=>x.kategorie===e.kategorie).length;
+      h+=`<div class="grp-h">${esc(e.kategorie)}<span class="c">${n}</span></div>`;
+    }
+    const kap=e.kategorie==='Kapitel'&&e.kapitel?`<span class="kap">${e.kapitel}</span>`:'';
+    const snip=(e.text||'').replace(/^-\s+/gm,'').replace(/\n+/g,' ').replace(/\*/g,'').trim();
+    const tags=(e.tags&&e.tags.length)?`<div class="tags">${e.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>`:'';
+    h+=`<div class="card" data-id="${e.id}">
+        <div class="top"><div class="nm">${esc(e.name)}</div>${kap}</div>
+        ${snip?`<div class="snip">${esc(snip)}</div>`:''}${tags}</div>`;
+  }
+  el.innerHTML=h;
+  $$('#list .card').forEach(c=>c.onclick=()=>openDetail(c.dataset.id));
+}
+function render(){renderChips();renderList();$('#statCount').textContent=state.entries.length;}
+
+/* ---------- detail ---------- */
+function openDetail(id){
+  const e=state.entries.find(x=>x.id===id);if(!e)return;
+  editingId=id;
+  const kap=e.kategorie==='Kapitel'&&e.kapitel?` <span class="kap" style="font-size:20px">· Kap. ${e.kapitel}</span>`:'';
+  const tags=(e.tags&&e.tags.length)?`<div class="det-tags">${e.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>`:'';
+  $('#detBody').innerHTML=`
+    <div class="det-cat">${esc(e.kategorie)}${kap}</div>
+    <div class="det-nm">${esc(e.name)}</div>${tags}
+    <div class="det-body">${mdToHtml(e.text)||'<p><em>Kein Text.</em></p>'}</div>`;
+  openSheet('sheetDetail');
+}
+
+/* ---------- editor ---------- */
+function refreshCatList(){
+  const cats=new Set([...CAT_ORDER,...state.entries.map(e=>e.kategorie)]);
+  $('#catList').innerHTML=[...cats].map(c=>`<option value="${esc(c)}">`).join('');
+}
+function openEditor(id){
+  editingId=id||null;refreshCatList();
+  const kapWrap=$('#kapWrap');
+  if(id){
+    const e=state.entries.find(x=>x.id===id);
+    $('#edTitle').textContent='Eintrag bearbeiten';
+    $('#edName').value=e.name;$('#edCat').value=e.kategorie;
+    $('#edTags').value=(e.tags||[]).join(', ');$('#edText').value=e.text;
+    $('#edKap').value=e.kapitel||'';
+    $('#edDelete').style.display='block';
+  }else{
+    $('#edTitle').textContent='Neuer Eintrag';
+    $('#edName').value='';$('#edCat').value=filterCat||'';
+    $('#edTags').value='';$('#edText').value='';$('#edKap').value='';
+    $('#edDelete').style.display='none';
+  }
+  toggleKap();
+  openSheet('sheetEdit');
+  setTimeout(()=>$('#edName').focus(),300);
+}
+function toggleKap(){$('#kapWrap').style.display=($('#edCat').value.trim()==='Kapitel')?'block':'none';}
+function saveEdit(){
+  const name=$('#edName').value.trim();
+  const cat=$('#edCat').value.trim();
+  if(!name){toast('Name fehlt');return;}
+  if(!cat){toast('Kategorie fehlt');return;}
+  const tags=$('#edTags').value.split(',').map(t=>t.trim()).filter(Boolean);
+  const text=$('#edText').value;
+  const kap=cat==='Kapitel'?(parseInt($('#edKap').value)||null):null;
+  if(editingId){
+    const e=state.entries.find(x=>x.id===editingId);
+    Object.assign(e,{name,kategorie:cat,tags,text,updated:new Date().toISOString()});
+    if(cat==='Kapitel')e.kapitel=kap;else delete e.kapitel;
+  }else{
+    const e={id:uid(),name,kategorie:cat,tags,text,updated:new Date().toISOString()};
+    if(cat==='Kapitel')e.kapitel=kap;
+    state.entries.push(e);
+  }
+  closeSheets();save();toast('Gespeichert');
+}
+function deleteEntry(){
+  if(!editingId)return;
+  if(!confirm('Diesen Eintrag löschen?'))return;
+  state.entries=state.entries.filter(x=>x.id!==editingId);
+  closeSheets();save();toast('Gelöscht');
+}
+
+/* ---------- import / export ---------- */
+function download(name,text,type){
+  const b=new Blob([text],{type});const u=URL.createObjectURL(b);
+  const a=document.createElement('a');a.href=u;a.download=name;a.click();
+  setTimeout(()=>URL.revokeObjectURL(u),1500);
+}
+function exportMarkdown(){
+  const d=new Date().toLocaleDateString('de-DE');
+  let md=`**Echo der Leere — Lore & Plot**\n\n*Codex-Export · Stand ${d} · ${state.entries.length} Einträge*\n\n`;
+  const byCat=new Map();
+  for(const e of sortEntries(state.entries.slice()))
+    (byCat.get(e.kategorie)||byCat.set(e.kategorie,[]).get(e.kategorie)).push(e);
+  const cats=[...byCat.keys()].sort((a,b)=>catRank(a)-catRank(b)||a.localeCompare(b));
+  for(const cat of cats){
+    md+=`# ${cat}\n\n`;
+    for(const e of byCat.get(cat)){
+      md+=`## ${e.name}\n\n`;
+      if(e.tags&&e.tags.length)md+=`*Tags: ${e.tags.join(', ')}*\n\n`;
+      if(e.text.trim())md+=e.text.trim()+'\n\n';
+    }
+  }
+  download('Lore_Echo_der_Leere.md',md.trim()+'\n','text/markdown');
+  toast('Markdown exportiert');
+}
+function exportJson(){
+  const data={version:1,app:'codex',exported:new Date().toISOString(),entries:state.entries};
+  download('codex-backup.json',JSON.stringify(data,null,2),'application/json');
+  toast('JSON exportiert');
+}
+function parseMarkdown(text){
+  const lines=text.split('\n');const out=[];let cat=null,name=null,buf=[],tags=[];
+  const flush=()=>{
+    if(name!==null&&cat!==null){
+      const t=buf.join('\n').trim();
+      const e={id:uid(),name,kategorie:cat,tags:tags.slice(),text:t,updated:new Date().toISOString()};
+      if(cat==='Kapitel'){const m=name.match(/Kapitel\s+(\d+)/);if(m)e.kapitel=+m[1];}
+      out.push(e);
+    }name=null;buf=[];tags=[];
+  };
+  for(let raw of lines){
+    const h1=raw.match(/^#\s+(.+?)\s*$/);
+    const h2=raw.match(/^##\s+(.+?)\s*$/);
+    if(h2){flush();name=h2[1].trim();continue;}
+    if(h1){flush();cat=h1[1].trim();continue;}
+    if(name!==null){
+      const tg=raw.match(/^\*Tags:\s*(.+?)\*\s*$/);
+      if(tg&&buf.length===0){tags=tg[1].split(',').map(s=>s.trim()).filter(Boolean);continue;}
+      buf.push(raw);
+    }
+  }
+  flush();return out;
+}
+function doImport(text,fname){
+  let incoming=[];
+  try{
+    if(fname.endsWith('.json')||text.trim().startsWith('{')){
+      const d=JSON.parse(text);incoming=(d.entries||[]).map(e=>({id:e.id||uid(),name:e.name||'',kategorie:e.kategorie||'Sonstiges',tags:e.tags||[],text:e.text||'',updated:e.updated||new Date().toISOString(),...(e.kapitel?{kapitel:e.kapitel}:{})}));
+    }else{
+      incoming=parseMarkdown(text);
+    }
+  }catch(err){toast('Import fehlgeschlagen: '+err.message);return;}
+  if(!incoming.length){toast('Keine Einträge gefunden');return;}
+  const mode=state.entries.length?
+    (confirm(`${incoming.length} Einträge gefunden.\n\nOK = ERSETZEN (aktuelle ${state.entries.length} verwerfen)\nAbbrechen = ZUSAMMENFÜHREN (nach Name/Kategorie)`)?'replace':'merge')
+    :'replace';
+  if(mode==='replace'){state.entries=incoming;}
+  else{
+    const key=e=>(e.kategorie+'|'+e.name).toLowerCase();
+    const map=new Map(state.entries.map(e=>[key(e),e]));
+    for(const e of incoming){const k=key(e);if(map.has(k)){Object.assign(map.get(k),{tags:e.tags,text:e.text,updated:e.updated,...(e.kapitel?{kapitel:e.kapitel}:{})});}else{state.entries.push(e);map.set(k,e);}}
+  }
+  closeSheets();save();toast(`${incoming.length} Einträge importiert (${mode==='replace'?'ersetzt':'zusammengeführt'})`);
+}
+
+/* ---------- sheets ---------- */
+function openSheet(id){$('#scrim').classList.add('show');$('#'+id).classList.add('show');}
+function closeSheets(){$('#scrim').classList.remove('show');$$('.sheet').forEach(s=>s.classList.remove('show'));}
+
+/* ---------- secret ---------- */
+function editSecret(){
+  const cur=secret();
+  const v=prompt('Cloud-Sync-Schlüssel (Bearer-Token).\nWird nur auf diesem Gerät gespeichert.',cur);
+  if(v===null)return;
+  localStorage.setItem(LS_SECRET,v.trim());renderSecretState();
+  if(v.trim())pullRemote();else setSync('','Lokal');
+}
+function renderSecretState(){$('#secState').textContent=secret()?'Schlüssel hinterlegt · aktiv':'Kein Schlüssel hinterlegt';}
+
+/* ---------- wire up ---------- */
+function initEvents(){
+  $('#fab').onclick=()=>openEditor(null);
+  $('#btnSettings').onclick=()=>{renderSecretState();renderLastSync();openSheet('sheetSettings');};
+  $('#scrim').onclick=closeSheets;
+  $('#q').oninput=renderList;
+  $('#edSave').onclick=saveEdit;
+  $('#edDelete').onclick=deleteEntry;
+  $('#edCat').oninput=toggleKap;
+  $('#detEdit').onclick=()=>{closeSheets();openEditor(editingId);};
+  $('#detClose').onclick=closeSheets;
+  $('#btnSecret').onclick=editSecret;
+  $('#btnSyncNow').onclick=()=>pullRemote(false);
+  $('#btnExpMd').onclick=exportMarkdown;
+  $('#btnExpJson').onclick=exportJson;
+  $('#btnImp').onclick=()=>$('#fileInput').click();
+  $('#fileInput').onchange=ev=>{const f=ev.target.files[0];if(!f)return;const r=new FileReader();
+    r.onload=()=>{doImport(r.result,f.name.toLowerCase());ev.target.value='';};r.readAsText(f);};
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&secret())pullRemote(true);});
+}
+
+/* ---------- boot ---------- */
+$('#verTxt').textContent=APP_VERSION;$('#verFoot').textContent=APP_VERSION;
+loadLocal();initEvents();render();renderSecretState();renderLastSync();
+if(secret())pullRemote(true);else setSync('','Lokal');
+
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw-codex.js').catch(()=>{});}
+</script>
+</body>
+</html>
