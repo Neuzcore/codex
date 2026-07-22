@@ -3,21 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#14161b">
+<meta name="theme-color" content="#fbfaf9">
 <title>Codex</title>
 <link rel="manifest" href="manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#14161b; --bg2:#191c22; --card:#1f232b; --card2:#252a33;
-    --line:#2e3540; --line2:#3a4250;
-    --ink:#e8eaef; --ink-soft:#aab2c0; --ink-dim:#7a828f;
-    --accent:#8fb9d9; --accent-ink:#0e1116; --accent-soft:#28323d;
-    --danger:#d98f8f; --ok:#8fd9a6; --warn:#d9c48f;
-    --r:15px; --sans:'Hanken Grotesk',system-ui,sans-serif; --serif:'Fraunces',Georgia,serif;
-    --navw:250px;
+    --bg:#fbfaf9; --bg2:#ffffff; --card:#ffffff; --card2:#f3f1ec;
+    --line:#e9e4db; --line2:#d8d2c6;
+    --ink:#221f1b; --ink-soft:#5c574e; --ink-dim:#948c7e;
+    --accent:#39406b; --accent-ink:#ffffff; --accent-soft:#eceef5;
+    --danger:#a64b3c; --ok:#3e7d54; --warn:#8a6d28;
+    --r:15px; --sans:'Hanken Grotesk',system-ui,sans-serif;
+    --serif:'Fraunces',Georgia,serif; --read:'Spectral',Georgia,serif;
+    --navw:256px;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;padding:0}
@@ -156,6 +157,65 @@
     .nav.open{transform:translateX(0)}
     .crumb{font-size:19px}
   }
+
+  /* ===== v0.3 · buchartiges, helles Theme ===== */
+  body{color:var(--ink)}
+  /* Masthead bleibt Fraunces; Inhalte lesen sich in Spectral */
+  .crumb{font-family:var(--read);font-weight:500;letter-spacing:0}
+  .sheet h2{font-family:var(--read);font-weight:500}
+  .det-nm{font-family:var(--read);font-weight:500;letter-spacing:.1px}
+  .det-cat{color:var(--accent)}
+  /* Leseseite: komfortabler Satzspiegel */
+  #sheetDetail{padding-left:22px;padding-right:22px}
+  .det-body{font-family:var(--read);font-size:16.5px;line-height:1.72;max-width:60ch;color:#2b2721}
+  .det-body em{font-family:var(--read);font-style:italic;color:var(--ink-soft)}
+
+  /* Einträge als feine Verzeichnis-Liste statt Kacheln */
+  .card{background:transparent;border:none;border-bottom:1px solid var(--line);border-radius:0;
+    padding:14px 8px;margin-bottom:0}
+  .card:hover,.card:active{background:var(--card2);border-color:var(--line)}
+  .card .nm{font-family:var(--read);font-weight:500;font-size:19px;letter-spacing:.1px}
+  .card .kap{font-family:var(--read);color:var(--accent);font-weight:500}
+  .card .path{color:var(--ink-dim)} .card .path b{color:var(--accent);font-weight:600}
+  .card .snip{font-family:var(--read);font-size:14px;color:var(--ink-soft)}
+
+  /* Gruppen-Eyebrow zurückhaltend */
+  .grp-h{color:var(--ink-dim)} .grp-h .l{background:var(--line)}
+
+  /* Seitenleiste wie ein Inhaltsverzeichnis */
+  .nav{border-right:1px solid var(--line)}
+  .nav-item{font-family:var(--serif);font-weight:500;font-size:15px}
+  .nav-item.on{box-shadow:inset 2px 0 0 var(--accent)}
+  .nav-item .cnt{font-family:var(--sans)}
+  .nav-sub{font-family:var(--sans);font-weight:600}
+
+  /* Bedienelemente aufs Helle abgestimmt */
+  .iconbtn:active{background:var(--card2)}
+  .fab{box-shadow:0 10px 26px rgba(43,47,74,.26)}
+  .scrim{background:rgba(34,31,27,.34)}
+  .sheet{box-shadow:0 -14px 40px rgba(34,31,27,.14)}
+  .toast{background:var(--ink);color:#fff;border-color:var(--ink)}
+  @media(max-width:820px){ .crumb{font-size:20px} }
+  @media(prefers-reduced-motion:reduce){ *{transition:none!important;animation:none!important} }
+
+  /* ===== v0.4 · Zeitstrahl / Zuletzt / Papierkorb ===== */
+  .card .meta{font-size:11.5px;font-weight:600;color:var(--ink-dim);margin-top:6px}
+  .tl-item{display:grid;grid-template-columns:92px 1fr;gap:16px;align-items:baseline;
+    padding:13px 8px;border-bottom:1px solid var(--line);cursor:pointer}
+  .tl-item:hover{background:var(--card2)}
+  .tl-year{font-family:var(--read);font-size:18px;font-weight:600;color:var(--accent);text-align:right;white-space:nowrap}
+  .tl-nm{font-family:var(--read);font-size:19px;font-weight:500}
+  .tl-path{font-size:11px;font-weight:600;color:var(--ink-dim);margin-top:3px}
+  .tl-snip{font-family:var(--read);font-size:13.5px;color:var(--ink-soft);margin-top:6px;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.45}
+  .viewnote{font-size:12.5px;color:var(--ink-dim);margin:16px 4px 0;font-style:italic}
+  .trash-actions{display:flex;gap:8px;margin-top:9px}
+  .trash-actions button{padding:6px 12px;border-radius:9px;font-size:12.5px;font-weight:600;
+    font-family:var(--sans);border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+  .trash-actions .del{color:var(--danger);border-color:var(--line)}
+  .toolbar{display:flex;justify-content:flex-end;margin:0 4px 8px}
+  .toolbar button{padding:7px 13px;border-radius:10px;font-size:12.5px;font-weight:600;
+    font-family:var(--sans);border:1px solid var(--line);background:var(--card);color:var(--danger);cursor:pointer}
 </style>
 </head>
 <body>
@@ -200,9 +260,13 @@
   <div class="fld"><label>Name</label><input id="edName" placeholder="z. B. Chimäre"></div>
   <div class="fld"><label>Kategorie</label>
     <input id="edCat" list="catList" placeholder="Kategorie"><datalist id="catList"></datalist></div>
-  <div class="fld" id="subWrap"><label>Unterkategorie</label>
-    <input id="edSub" list="subList" placeholder="z. B. Raumschiffe"><datalist id="subList"></datalist>
-    <div class="hint">Feste Gliederung innerhalb der Kategorie. Neue einfach eintippen.</div></div>
+  <div class="row2" id="subRow">
+    <div class="fld" id="subWrap"><label>Unterkategorie</label>
+      <input id="edSub" list="subList" placeholder="z. B. Raumschiffe"><datalist id="subList"></datalist></div>
+    <div class="fld" id="jahrWrap"><label>Jahr (optional)</label>
+      <input id="edJahr" placeholder="z. B. 324 UHD"></div>
+  </div>
+  <div class="hint" id="subHint" style="margin:-8px 0 14px">Feste Gliederung; neue Unterkategorie einfach eintippen. Jahr erscheint im Zeitstrahl.</div>
   <div class="fld" id="kapWrap" style="display:none"><label>Kapitel-Nr.</label><input id="edKap" type="number" min="1" placeholder="1"></div>
   <div class="fld"><label>Text</label>
     <textarea id="edText" placeholder="Freitext. Zeilen mit „- “ werden als Liste dargestellt."></textarea>
@@ -244,7 +308,7 @@
 
 <script>
 'use strict';
-const APP_VERSION='v0.2';
+const APP_VERSION='v0.4';
 const KV_BASE='https://kv-store.neuzcore.workers.dev';
 const KV_KEY='codex/data';
 const LS_DATA='codex_data', LS_SECRET='codex_secret', LS_SYNC='codex_lastsync';
@@ -262,8 +326,8 @@ const SUBCATS={
   'Zeitleiste':[], "Ba'al":[], 'Kapitel':[]
 };
 
-let state={entries:[]};
-let sel={cat:'',sub:''};
+let state={entries:[],trash:[]};
+let sel={cat:'',sub:'',view:''};   // view: '' | 'recent' | 'timeline' | 'trash'
 let sortMode='name';
 let expanded=new Set();
 let editingId=null;
@@ -288,7 +352,21 @@ function mdToHtml(txt){
 function inl(s){return esc(s).replace(/\*([^*]+)\*/g,'<em>$1</em>');}
 
 /* persistence + migration */
-function migrate(){for(const e of state.entries){if(e.unterkategorie===undefined)e.unterkategorie='';delete e.tags;}}
+function migrate(){
+  if(!Array.isArray(state.trash))state.trash=[];
+  for(const e of state.entries){if(e.unterkategorie===undefined)e.unterkategorie='';if(e.jahr===undefined)e.jahr='';delete e.tags;}
+}
+function fmtDate(iso){try{return new Date(iso).toLocaleDateString('de-DE',{day:'2-digit',month:'short',year:'numeric'});}catch(e){return '';}}
+function fmtDateTime(iso){try{return new Date(iso).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return '';}}
+/* Zeitstrahl: Jahr aus Feld oder – als Rückfall – aus Name/Text (Muster „NNN UHD“) */
+function parseYear(str){if(!str)return null;const m=String(str).match(/(-?\d{1,4})/);return m?parseInt(m[1],10):null;}
+function effectiveYear(e){
+  if(e.jahr&&e.jahr.trim())return {y:parseYear(e.jahr),label:e.jahr.trim()};
+  if(e.kategorie!=='Ereignisse')return null;   // Auto-Erkennung nur für Ereignisse
+  const m=(e.name+' '+(e.text||'')).match(/(\d{2,4})(?:\s*[–-]+\s*(\d{2,4}))?\s*UHD/);
+  if(m)return {y:parseInt(m[1],10),label:(m[2]?`${m[1]}–${m[2]}`:m[1])+' UHD'};
+  return null;
+}
 function loadLocal(){try{const d=JSON.parse(localStorage.getItem(LS_DATA));if(d&&Array.isArray(d.entries)){state=d;migrate();}}catch(e){}}
 function saveLocal(){localStorage.setItem(LS_DATA,JSON.stringify(state));}
 async function save(){saveLocal();render();pushRemote();}
@@ -312,7 +390,7 @@ async function pushRemote(){
   const s=secret();if(!s){setSync('','Lokal');return;}
   setSync('busy','Sync…');
   try{
-    state.version=2;state.app='codex';state.exported=new Date().toISOString();
+    state.version=4;state.app='codex';state.exported=new Date().toISOString();
     const r=await fetch(`${KV_BASE}/${KV_KEY}`,{method:'PUT',
       headers:{'Authorization':'Bearer '+s,'Content-Type':'application/json'},body:JSON.stringify(state)});
     if(!r.ok)throw new Error('HTTP '+r.status);stamp();setSync('ok','Synchron');
@@ -343,21 +421,29 @@ const countSub=(c,s)=>state.entries.filter(e=>e.kategorie===c&&(e.unterkategorie
 /* sidebar */
 function renderNav(){
   const nav=$('#nav');let h='';
-  h+=`<div class="nav-item ${sel.cat===''?'on':''}" data-cat="" data-sub="">
+  const datedCount=state.entries.filter(e=>effectiveYear(e)).length;
+  const allOn=sel.cat===''&&sel.view==='';
+  h+=`<div class="nav-item ${allOn?'on':''}" data-cat="" data-sub="">
         <span class="caret none"></span>Alle Einträge<span class="cnt">${state.entries.length}</span></div>`;
+  h+=`<div class="nav-item ${sel.view==='recent'?'on':''}" data-view="recent">
+        <span class="caret none"></span>Zuletzt geändert</div>`;
+  h+=`<div class="nav-item ${sel.view==='timeline'?'on':''}" data-view="timeline">
+        <span class="caret none"></span>Zeitstrahl<span class="cnt">${datedCount}</span></div>`;
+  h+=`<div class="nav-item ${sel.view==='trash'?'on':''}" data-view="trash">
+        <span class="caret none"></span>Papierkorb<span class="cnt">${state.trash.length}</span></div>`;
   h+=`<div class="nav-divider"></div>`;
   for(const cat of orderedCats()){
     const subs=orderedSubs(cat).filter(s=>s!=='');
     const hasSubs=subs.length>0;
     const isOpen=expanded.has(cat);
-    const active=sel.cat===cat&&sel.sub==='';
+    const active=sel.view===''&&sel.cat===cat&&sel.sub==='';
     h+=`<div class="nav-cat"><div class="nav-item ${active?'on':''}" data-cat="${esc(cat)}" data-sub="">
           <span class="caret ${hasSubs?(isOpen?'open':''):'none'}" data-toggle="${esc(cat)}">▸</span>
           ${esc(cat)}<span class="cnt">${countCat(cat)}</span></div>`;
     if(hasSubs&&isOpen){
       h+=`<div class="nav-subs">`;
       for(const s of subs)
-        h+=`<div class="nav-sub ${sel.cat===cat&&sel.sub===s?'on':''}" data-cat="${esc(cat)}" data-sub="${esc(s)}">
+        h+=`<div class="nav-sub ${sel.view===''&&sel.cat===cat&&sel.sub===s?'on':''}" data-cat="${esc(cat)}" data-sub="${esc(s)}">
               ${esc(s)}<span class="cnt">${countSub(cat,s)}</span></div>`;
       h+=`</div>`;
     }
@@ -367,14 +453,19 @@ function renderNav(){
   $$('#nav .caret[data-toggle]').forEach(c=>c.onclick=ev=>{
     ev.stopPropagation();const cat=c.dataset.toggle;
     if(expanded.has(cat))expanded.delete(cat);else expanded.add(cat);renderNav();});
+  $$('#nav .nav-item[data-view]').forEach(it=>it.onclick=()=>selectView(it.dataset.view));
   $$('#nav .nav-item[data-cat]').forEach(it=>it.onclick=()=>selectNode(it.dataset.cat,it.dataset.sub,true));
   $$('#nav .nav-sub').forEach(it=>it.onclick=()=>selectNode(it.dataset.cat,it.dataset.sub,false));
 }
 function selectNode(cat,sub,isCat){
-  sel={cat,sub};
+  sel={cat,sub,view:''};
   if(cat&&isCat)expanded.add(cat);
   if(cat==='Kapitel'){sortMode='kapitel';$('#sort').value='kapitel';}
   else if(sortMode==='kapitel'){sortMode='name';$('#sort').value='name';}
+  closeNav();renderNav();renderList();
+}
+function selectView(view){
+  sel={cat:'',sub:'',view};
   closeNav();renderNav();renderList();
 }
 
@@ -395,15 +486,18 @@ function sortItems(items){
     return a.name.localeCompare(b.name,'de');
   });
 }
-function cardHTML(e){
+function cardHTML(e,extra){
   const kap=e.kategorie==='Kapitel'&&e.kapitel?`<span class="kap">${e.kapitel}</span>`:'';
   const snip=(e.text||'').replace(/^-\s+/gm,'').replace(/\n+/g,' ').replace(/\*/g,'').trim();
-  const path=(sel.cat&&sel.sub)?''
+  const path=(sel.view===''&&sel.cat&&sel.sub)?''
     :`<div class="path">${esc(e.kategorie)}${e.unterkategorie?` · <b>${esc(e.unterkategorie)}</b>`:''}</div>`;
   return `<div class="card" data-id="${e.id}"><div class="top"><div class="nm">${esc(e.name)}</div>${kap}</div>
-    ${path}${snip?`<div class="snip">${esc(snip)}</div>`:''}</div>`;
+    ${path}${snip?`<div class="snip">${esc(snip)}</div>`:''}${extra||''}</div>`;
 }
 function renderList(){
+  if(sel.view==='recent')return renderRecent();
+  if(sel.view==='timeline')return renderTimeline();
+  if(sel.view==='trash')return renderTrash();
   const main=$('#main');
   const crumb=`<div class="crumb">${sel.cat?esc(sel.cat):'Alle Einträge'}${sel.sub?` <span class="sep">›</span> ${esc(sel.sub)}`:''}
     <span class="cnt">${baseFilter().length}</span></div>`;
@@ -418,18 +512,77 @@ function renderList(){
       const grp=sortItems(items.filter(e=>(e.unterkategorie||'')===s));
       if(!grp.length)continue;
       if(sel.cat!=='Kapitel')body+=`<div class="grp-h">${esc(s||'Ohne Unterkategorie')}<span class="l"></span></div>`;
-      body+=grp.map(cardHTML).join('');
+      body+=grp.map(e=>cardHTML(e)).join('');
     }
   } else if(!sel.cat){
     for(const c of orderedCats()){
       const grp=sortItems(items.filter(e=>e.kategorie===c));
       if(!grp.length)continue;
-      body+=`<div class="grp-h">${esc(c)}<span class="l"></span></div>`+grp.map(cardHTML).join('');
+      body+=`<div class="grp-h">${esc(c)}<span class="l"></span></div>`+grp.map(e=>cardHTML(e)).join('');
     }
   } else {
-    body=sortItems(items).map(cardHTML).join('');
+    body=sortItems(items).map(e=>cardHTML(e)).join('');
   }
   main.innerHTML=crumb+body;bindCards();
+}
+
+/* --- Zuletzt geändert --- */
+function renderRecent(){
+  const q=$('#q').value.trim().toLowerCase();
+  let items=state.entries.filter(e=>!q||(e.name+' '+e.text+' '+e.kategorie+' '+(e.unterkategorie||'')).toLowerCase().includes(q));
+  items=items.slice().sort((a,b)=>(b.updated||'').localeCompare(a.updated||''));
+  const crumb=`<div class="crumb">Zuletzt geändert<span class="cnt">${items.length}</span></div>`;
+  if(!items.length){$('#main').innerHTML=crumb+`<div class="empty"><div class="big">Noch nichts</div>Bearbeitete Einträge erscheinen hier, neueste zuerst.</div>`;return;}
+  const body=items.map(e=>cardHTML(e,`<div class="meta">Geändert: ${fmtDate(e.updated)}</div>`)).join('');
+  $('#main').innerHTML=crumb+body;bindCards();
+}
+
+/* --- Zeitstrahl --- */
+function renderTimeline(){
+  const q=$('#q').value.trim().toLowerCase();
+  const rows=[];
+  for(const e of state.entries){
+    const y=effectiveYear(e);if(!y)continue;
+    if(q&&!(e.name+' '+e.text+' '+e.kategorie).toLowerCase().includes(q))continue;
+    rows.push({e,y:y.y,label:y.label});
+  }
+  rows.sort((a,b)=>(a.y??1e9)-(b.y??1e9)||a.e.name.localeCompare(b.e.name,'de'));
+  const total=state.entries.filter(e=>effectiveYear(e)).length;
+  const undated=state.entries.length-total;
+  const crumb=`<div class="crumb">Zeitstrahl<span class="cnt">${rows.length}</span></div>`;
+  if(!rows.length){$('#main').innerHTML=crumb+`<div class="empty"><div class="big">Keine Datierung</div>Trage bei Einträgen ein „Jahr“ ein (z. B. 324 UHD) – oder nutze „NNN UHD“ im Text.</div>`;return;}
+  let body='';
+  for(const r of rows){
+    const snip=(r.e.text||'').replace(/^-\s+/gm,'').replace(/\n+/g,' ').replace(/\*/g,'').trim();
+    body+=`<div class="tl-item" data-id="${r.e.id}">
+      <div class="tl-year">${esc(r.label)}</div>
+      <div><div class="tl-nm">${esc(r.e.name)}</div>
+        <div class="tl-path">${esc(r.e.kategorie)}${r.e.unterkategorie?` · ${esc(r.e.unterkategorie)}`:''}</div>
+        ${snip?`<div class="tl-snip">${esc(snip)}</div>`:''}</div></div>`;
+  }
+  if(undated>0)body+=`<div class="viewnote">${undated} Einträge ohne Datierung ausgeblendet.</div>`;
+  $('#main').innerHTML=crumb+body;
+  $$('#main .tl-item').forEach(c=>c.onclick=()=>openDetail(c.dataset.id));
+}
+
+/* --- Papierkorb --- */
+function renderTrash(){
+  const q=$('#q').value.trim().toLowerCase();
+  let items=state.trash.filter(e=>!q||(e.name+' '+e.text+' '+e.kategorie).toLowerCase().includes(q));
+  items=items.slice().sort((a,b)=>(b.deletedAt||'').localeCompare(a.deletedAt||''));
+  const crumb=`<div class="crumb">Papierkorb<span class="cnt">${items.length}</span></div>`;
+  if(!items.length){$('#main').innerHTML=crumb+`<div class="empty"><div class="big">Papierkorb ist leer</div>Gelöschte Einträge landen hier und lassen sich wiederherstellen.</div>`;return;}
+  const bar=`<div class="toolbar"><button id="emptyTrash">Papierkorb leeren</button></div>`;
+  const body=items.map(e=>`<div class="card">
+      <div class="top"><div class="nm">${esc(e.name)}</div></div>
+      <div class="path">${esc(e.kategorie)}${e.unterkategorie?` · <b>${esc(e.unterkategorie)}</b>`:''}</div>
+      <div class="meta">Gelöscht: ${fmtDate(e.deletedAt)}</div>
+      <div class="trash-actions"><button data-restore="${e.id}">Wiederherstellen</button>
+        <button class="del" data-purge="${e.id}">Endgültig löschen</button></div></div>`).join('');
+  $('#main').innerHTML=crumb+bar+body;
+  const et=$('#emptyTrash');if(et)et.onclick=emptyTrash;
+  $$('#main [data-restore]').forEach(b=>b.onclick=()=>restoreEntry(b.dataset.restore));
+  $$('#main [data-purge]').forEach(b=>b.onclick=()=>purgeEntry(b.dataset.purge));
 }
 function bindCards(){$$('#main .card').forEach(c=>c.onclick=()=>openDetail(c.dataset.id));}
 function render(){renderNav();renderList();$('#statCount').textContent=state.entries.length;}
@@ -439,7 +592,8 @@ function openDetail(id){
   const e=state.entries.find(x=>x.id===id);if(!e)return;editingId=id;
   const kap=e.kategorie==='Kapitel'&&e.kapitel?` · Kap. ${e.kapitel}`:'';
   const sub=e.unterkategorie?` › ${esc(e.unterkategorie)}`:'';
-  $('#detBody').innerHTML=`<div class="det-cat">${esc(e.kategorie)}${sub}${kap}</div>
+  const jahr=e.jahr&&e.jahr.trim()?` · ${esc(e.jahr.trim())}`:'';
+  $('#detBody').innerHTML=`<div class="det-cat">${esc(e.kategorie)}${sub}${jahr}${kap}</div>
     <div class="det-nm">${esc(e.name)}</div>
     <div class="det-body">${mdToHtml(e.text)||'<p><em>Kein Text.</em></p>'}</div>`;
   openSheet('sheetDetail');
@@ -454,7 +608,8 @@ function fillSubList(cat){
 function toggleFields(){
   const cat=$('#edCat').value.trim();const isKap=cat==='Kapitel';
   $('#kapWrap').style.display=isKap?'block':'none';
-  $('#subWrap').style.display=isKap?'none':'block';
+  $('#subRow').style.display=isKap?'none':'flex';
+  $('#subHint').style.display=isKap?'none':'block';
   fillSubList(cat);
 }
 function openEditor(id){
@@ -463,10 +618,12 @@ function openEditor(id){
     const e=state.entries.find(x=>x.id===id);
     $('#edTitle').textContent='Eintrag bearbeiten';
     $('#edName').value=e.name;$('#edCat').value=e.kategorie;$('#edSub').value=e.unterkategorie||'';
+    $('#edJahr').value=e.jahr||'';
     $('#edText').value=e.text;$('#edKap').value=e.kapitel||'';$('#edDelete').style.display='block';
   }else{
     $('#edTitle').textContent='Neuer Eintrag';
     $('#edName').value='';$('#edCat').value=sel.cat||'';$('#edSub').value=sel.sub||'';
+    $('#edJahr').value='';
     $('#edText').value='';$('#edKap').value='';$('#edDelete').style.display='none';
   }
   toggleFields();openSheet('sheetEdit');setTimeout(()=>$('#edName').focus(),300);
@@ -476,21 +633,41 @@ function saveEdit(){
   if(!name){toast('Name fehlt');return;} if(!cat){toast('Kategorie fehlt');return;}
   const isKap=cat==='Kapitel';
   const sub=isKap?'':$('#edSub').value.trim();
+  const jahr=isKap?'':$('#edJahr').value.trim();
   const text=$('#edText').value;
   const kap=isKap?(parseInt($('#edKap').value)||null):null;
   if(editingId){
     const e=state.entries.find(x=>x.id===editingId);
-    Object.assign(e,{name,kategorie:cat,unterkategorie:sub,text,updated:new Date().toISOString()});
+    Object.assign(e,{name,kategorie:cat,unterkategorie:sub,jahr,text,updated:new Date().toISOString()});
     if(isKap)e.kapitel=kap;else delete e.kapitel;
   }else{
-    const e={id:uid(),name,kategorie:cat,unterkategorie:sub,text,updated:new Date().toISOString()};
+    const e={id:uid(),name,kategorie:cat,unterkategorie:sub,jahr,text,updated:new Date().toISOString()};
     if(isKap)e.kapitel=kap;state.entries.push(e);
   }
   closeSheets();save();toast('Gespeichert');
 }
 function deleteEntry(){
-  if(!editingId||!confirm('Diesen Eintrag löschen?'))return;
-  state.entries=state.entries.filter(x=>x.id!==editingId);closeSheets();save();toast('Gelöscht');
+  if(!editingId)return;
+  const e=state.entries.find(x=>x.id===editingId);if(!e)return;
+  if(!confirm('In den Papierkorb verschieben?'))return;
+  state.entries=state.entries.filter(x=>x.id!==editingId);
+  state.trash.unshift({...e,deletedAt:new Date().toISOString()});
+  closeSheets();save();toast('In den Papierkorb verschoben');
+}
+function restoreEntry(id){
+  const i=state.trash.findIndex(x=>x.id===id);if(i<0)return;
+  const e=state.trash.splice(i,1)[0];delete e.deletedAt;
+  e.updated=new Date().toISOString();state.entries.push(e);
+  save();toast('Wiederhergestellt');
+}
+function purgeEntry(id){
+  if(!confirm('Diesen Eintrag endgültig löschen? Das lässt sich nicht rückgängig machen.'))return;
+  state.trash=state.trash.filter(x=>x.id!==id);save();toast('Endgültig gelöscht');
+}
+function emptyTrash(){
+  if(!state.trash.length)return;
+  if(!confirm(`Papierkorb leeren? ${state.trash.length} Einträge werden endgültig gelöscht.`))return;
+  state.trash=[];save();toast('Papierkorb geleert');
 }
 
 /* import / export */
@@ -505,14 +682,14 @@ function exportMarkdown(){
       const grp=state.entries.filter(e=>e.kategorie===cat&&(e.unterkategorie||'')===s)
         .sort((a,b)=>cat==='Kapitel'?((a.kapitel||999)-(b.kapitel||999)):a.name.localeCompare(b.name,'de'));
       if(!grp.length)continue;
-      if(s){md+=`## ${s}\n\n`;for(const e of grp){md+=`### ${e.name}\n\n`;if(e.text.trim())md+=e.text.trim()+'\n\n';}}
-      else{for(const e of grp){md+=`## ${e.name}\n\n`;if(e.text.trim())md+=e.text.trim()+'\n\n';}}
+      if(s){md+=`## ${s}\n\n`;for(const e of grp){md+=`### ${e.name}\n\n`;if(e.jahr&&e.jahr.trim())md+=`*Jahr: ${e.jahr.trim()}*\n\n`;if(e.text.trim())md+=e.text.trim()+'\n\n';}}
+      else{for(const e of grp){md+=`## ${e.name}\n\n`;if(e.jahr&&e.jahr.trim())md+=`*Jahr: ${e.jahr.trim()}*\n\n`;if(e.text.trim())md+=e.text.trim()+'\n\n';}}
     }
   }
   download('Lore_Echo_der_Leere.md',md.trim()+'\n','text/markdown');toast('Markdown exportiert');
 }
 function exportJson(){download('codex-backup.json',
-  JSON.stringify({version:2,app:'codex',exported:new Date().toISOString(),entries:state.entries},null,2),
+  JSON.stringify({version:4,app:'codex',exported:new Date().toISOString(),entries:state.entries,trash:state.trash},null,2),
   'application/json');toast('JSON exportiert');}
 function parseMarkdown(text){
   const lines=text.split('\n');const segs=[];let buf=[];
@@ -538,29 +715,32 @@ function parseMarkdown(text){
   return out;
 }
 function pushEntry(out,cat,sub,name,body){
-  const e={id:uid(),name,kategorie:cat||'Sonstiges',unterkategorie:sub||'',text:body||'',updated:new Date().toISOString()};
+  let jahr='';
+  body=(body||'').replace(/^\s*\*Jahr:\s*(.+?)\*\s*$/m,(m,g)=>{jahr=g.trim();return '';}).trim();
+  const e={id:uid(),name,kategorie:cat||'Sonstiges',unterkategorie:sub||'',jahr,text:body,updated:new Date().toISOString()};
   if(e.kategorie==='Kapitel'){const m=name.match(/Kapitel\s+(\d+)/);if(m)e.kapitel=+m[1];}
   out.push(e);
 }
 function doImport(text,fname){
-  let incoming=[];
+  let incoming=[];let incomingTrash=null;
   try{
     if(fname.endsWith('.json')||text.trim().startsWith('{')){
       const d=JSON.parse(text);
       incoming=(d.entries||[]).map(e=>{const r={id:e.id||uid(),name:e.name||'',kategorie:e.kategorie||'Sonstiges',
-        unterkategorie:e.unterkategorie||'',text:e.text||'',updated:e.updated||new Date().toISOString()};
+        unterkategorie:e.unterkategorie||'',jahr:e.jahr||'',text:e.text||'',updated:e.updated||new Date().toISOString()};
         if(e.kapitel)r.kapitel=e.kapitel;return r;});
+      if(Array.isArray(d.trash))incomingTrash=d.trash;
     }else incoming=parseMarkdown(text);
   }catch(err){toast('Import fehlgeschlagen: '+err.message);return;}
   if(!incoming.length){toast('Keine Einträge gefunden');return;}
   const mode=state.entries.length?
     (confirm(`${incoming.length} Einträge gefunden.\n\nOK = ERSETZEN (aktuelle ${state.entries.length} verwerfen)\nAbbrechen = ZUSAMMENFÜHREN (nach Name/Kategorie)`)?'replace':'merge')
     :'replace';
-  if(mode==='replace')state.entries=incoming;
+  if(mode==='replace'){state.entries=incoming;if(incomingTrash)state.trash=incomingTrash;}
   else{
     const key=e=>(e.kategorie+'|'+e.name).toLowerCase();
     const map=new Map(state.entries.map(e=>[key(e),e]));
-    for(const e of incoming){const k=key(e);if(map.has(k))Object.assign(map.get(k),{unterkategorie:e.unterkategorie,text:e.text,updated:e.updated,...(e.kapitel?{kapitel:e.kapitel}:{})});
+    for(const e of incoming){const k=key(e);if(map.has(k))Object.assign(map.get(k),{unterkategorie:e.unterkategorie,jahr:e.jahr,text:e.text,updated:e.updated,...(e.kapitel?{kapitel:e.kapitel}:{})});
       else{state.entries.push(e);map.set(k,e);}}
   }
   closeSheets();save();toast(`${incoming.length} importiert (${mode==='replace'?'ersetzt':'zusammengeführt'})`);
