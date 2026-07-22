@@ -216,6 +216,11 @@
   .toolbar{display:flex;justify-content:flex-end;margin:0 4px 8px}
   .toolbar button{padding:7px 13px;border-radius:10px;font-size:12.5px;font-weight:600;
     font-family:var(--sans);border:1px solid var(--line);background:var(--card);color:var(--danger);cursor:pointer}
+  .echips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .echip{padding:5px 11px;border-radius:20px;border:1px solid var(--line);background:var(--card);
+    color:var(--ink-soft);font-size:12.5px;font-weight:600;cursor:pointer;font-family:var(--sans)}
+  .echip:hover{background:var(--card2)}
+  .echip.on{background:var(--accent-soft);border-color:var(--accent);color:var(--ink)}
 </style>
 </head>
 <body>
@@ -259,10 +264,12 @@
   <h2 id="edTitle">Neuer Eintrag</h2>
   <div class="fld"><label>Name</label><input id="edName" placeholder="z. B. Chimäre"></div>
   <div class="fld"><label>Kategorie</label>
-    <input id="edCat" list="catList" placeholder="Kategorie"><datalist id="catList"></datalist></div>
+    <input id="edCat" list="catList" placeholder="Kategorie"><datalist id="catList"></datalist>
+    <div class="echips" id="catChips"></div></div>
   <div class="row2" id="subRow">
     <div class="fld" id="subWrap"><label>Unterkategorie</label>
-      <input id="edSub" list="subList" placeholder="z. B. Raumschiffe"><datalist id="subList"></datalist></div>
+      <input id="edSub" list="subList" placeholder="z. B. Raumschiffe"><datalist id="subList"></datalist>
+      <div class="echips" id="subChips"></div></div>
     <div class="fld" id="jahrWrap"><label>Jahr (optional)</label>
       <input id="edJahr" placeholder="z. B. 324 UHD"></div>
   </div>
@@ -308,12 +315,12 @@
 
 <script>
 'use strict';
-const APP_VERSION='v0.4';
+const APP_VERSION='v0.5';
 const KV_BASE='https://kv-store.neuzcore.workers.dev';
 const KV_KEY='codex/data';
 const LS_DATA='codex_data', LS_SECRET='codex_secret', LS_SYNC='codex_lastsync';
 
-const CAT_ORDER=['Welt','Politik','Zeitleiste','Ereignisse','Organisationen','Personen','Orte','Technologie','Artefakte',"Ba'al",'Kapitel'];
+const CAT_ORDER=['Welt','Politik','Ereignisse','Organisationen','Personen','Orte','Technologie','Artefakte',"Ba'al",'Kapitel'];
 const SUBCATS={
   'Welt':['Kosmologie','Grundlagen'],
   'Politik':['Fraktionen','Institutionen'],
@@ -323,7 +330,7 @@ const SUBCATS={
   'Orte':['Welten','Stationen','Regionen'],
   'Technologie':['Raumschiffe','Waffen','Ausrüstung','Systeme','Material','Substanzen','Sonstiges'],
   'Artefakte':['Abomination','Flora','Sonstiges'],
-  'Zeitleiste':[], "Ba'al":[], 'Kapitel':[]
+  "Ba'al":[], 'Kapitel':[]
 };
 
 let state={entries:[],trash:[]};
@@ -402,18 +409,13 @@ function renderLastSync(){const t=localStorage.getItem(LS_SYNC);
 
 /* tree helpers */
 function orderedCats(){
-  const present=new Set(state.entries.map(e=>e.kategorie));
-  const base=CAT_ORDER.filter(c=>present.has(c));
-  const extra=[...present].filter(c=>!CAT_ORDER.includes(c)).sort((a,b)=>a.localeCompare(b,'de'));
-  return [...base,...extra];
+  return [...new Set(state.entries.map(e=>e.kategorie))].sort((a,b)=>a.localeCompare(b,'de'));
 }
 function orderedSubs(cat){
-  const present=new Set(state.entries.filter(e=>e.kategorie===cat).map(e=>e.unterkategorie||''));
-  const base=(SUBCATS[cat]||[]).filter(s=>present.has(s));
-  const extra=[...present].filter(s=>s&&!(SUBCATS[cat]||[]).includes(s)).sort((a,b)=>a.localeCompare(b,'de'));
-  const res=[...base,...extra];
-  if(present.has(''))res.push('');
-  return res;
+  const present=[...new Set(state.entries.filter(e=>e.kategorie===cat).map(e=>e.unterkategorie||''))];
+  const named=present.filter(s=>s).sort((a,b)=>a.localeCompare(b,'de'));
+  if(present.includes(''))named.push('');   // „Ohne Unterkategorie“ ans Ende
+  return named;
 }
 const countCat=c=>state.entries.filter(e=>e.kategorie===c).length;
 const countSub=(c,s)=>state.entries.filter(e=>e.kategorie===c&&(e.unterkategorie||'')===s).length;
@@ -610,7 +612,19 @@ function toggleFields(){
   $('#kapWrap').style.display=isKap?'block':'none';
   $('#subRow').style.display=isKap?'none':'flex';
   $('#subHint').style.display=isKap?'none':'block';
-  fillSubList(cat);
+  fillSubList(cat);renderSubChips();
+}
+function renderCatChips(){
+  const cur=$('#edCat').value.trim();
+  const cats=[...new Set([...CAT_ORDER,...state.entries.map(e=>e.kategorie)])].sort((a,b)=>a.localeCompare(b,'de'));
+  $('#catChips').innerHTML=cats.map(c=>`<span class="echip ${c===cur?'on':''}" data-c="${esc(c)}">${esc(c)}</span>`).join('');
+  $$('#catChips .echip').forEach(ch=>ch.onclick=()=>{$('#edCat').value=ch.dataset.c;toggleFields();renderCatChips();});
+}
+function renderSubChips(){
+  const cat=$('#edCat').value.trim();const cur=$('#edSub').value.trim();
+  const subs=[...new Set([...(SUBCATS[cat]||[]),...state.entries.filter(e=>e.kategorie===cat).map(e=>e.unterkategorie).filter(Boolean)])].sort((a,b)=>a.localeCompare(b,'de'));
+  $('#subChips').innerHTML=subs.map(s=>`<span class="echip ${s===cur?'on':''}" data-s="${esc(s)}">${esc(s)}</span>`).join('');
+  $$('#subChips .echip').forEach(ch=>ch.onclick=()=>{$('#edSub').value=ch.dataset.s;renderSubChips();});
 }
 function openEditor(id){
   editingId=id||null;fillCatList();
@@ -626,7 +640,7 @@ function openEditor(id){
     $('#edJahr').value='';
     $('#edText').value='';$('#edKap').value='';$('#edDelete').style.display='none';
   }
-  toggleFields();openSheet('sheetEdit');setTimeout(()=>$('#edName').focus(),300);
+  toggleFields();renderCatChips();openSheet('sheetEdit');setTimeout(()=>$('#edName').focus(),300);
 }
 function saveEdit(){
   const name=$('#edName').value.trim(),cat=$('#edCat').value.trim();
@@ -765,7 +779,9 @@ function initEvents(){
   $('#scrim').onclick=()=>{closeSheets();};
   $('#q').oninput=renderList;
   $('#sort').onchange=e=>{sortMode=e.target.value;renderList();};
-  $('#edSave').onclick=saveEdit;$('#edDelete').onclick=deleteEntry;$('#edCat').oninput=toggleFields;
+  $('#edSave').onclick=saveEdit;$('#edDelete').onclick=deleteEntry;
+  $('#edCat').oninput=()=>{toggleFields();renderCatChips();};
+  $('#edSub').oninput=renderSubChips;
   $('#detEdit').onclick=()=>{closeSheets();openEditor(editingId);};$('#detClose').onclick=closeSheets;
   $('#btnSecret').onclick=editSecret;$('#btnSyncNow').onclick=()=>pullRemote(false);
   $('#btnExpMd').onclick=exportMarkdown;$('#btnExpJson').onclick=exportJson;
