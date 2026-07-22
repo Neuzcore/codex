@@ -315,22 +315,21 @@
 
 <script>
 'use strict';
-const APP_VERSION='v0.5';
+const APP_VERSION='v0.6';
 const KV_BASE='https://kv-store.neuzcore.workers.dev';
 const KV_KEY='codex/data';
 const LS_DATA='codex_data', LS_SECRET='codex_secret', LS_SYNC='codex_lastsync';
 
-const CAT_ORDER=['Welt','Politik','Ereignisse','Organisationen','Personen','Orte','Technologie','Artefakte',"Ba'al",'Kapitel'];
+const CAT_ORDER=['Welt','Politik','Ereignisse','Organisationen','Personen','Orte','Technologie','Kapitel'];
 const SUBCATS={
-  'Welt':['Kosmologie','Grundlagen'],
+  'Welt':['Kosmologie','Abomination'],
   'Politik':['Fraktionen','Institutionen'],
   'Organisationen':['Geheimdienste','Gegner'],
   'Ereignisse':['Kriege','Schlachten'],
   'Personen':['Hegemonie','Resonanz','Grenzwelten','Zivil','Sonstige'],
   'Orte':['Welten','Stationen','Regionen'],
-  'Technologie':['Raumschiffe','Waffen','Ausrüstung','Systeme','Material','Substanzen','Sonstiges'],
-  'Artefakte':['Abomination','Flora','Sonstiges'],
-  "Ba'al":[], 'Kapitel':[]
+  'Technologie':['Raumschiffe & Antrieb','Waffen','Ausrüstung','Werkstoffe & Substanzen'],
+  'Kapitel':[]
 };
 
 let state={entries:[],trash:[]};
@@ -369,8 +368,8 @@ function fmtDateTime(iso){try{return new Date(iso).toLocaleString('de-DE',{day:'
 function parseYear(str){if(!str)return null;const m=String(str).match(/(-?\d{1,4})/);return m?parseInt(m[1],10):null;}
 function effectiveYear(e){
   if(e.jahr&&e.jahr.trim())return {y:parseYear(e.jahr),label:e.jahr.trim()};
-  if(e.kategorie!=='Ereignisse')return null;   // Auto-Erkennung nur für Ereignisse
-  const m=(e.name+' '+(e.text||'')).match(/(\d{2,4})(?:\s*[–-]+\s*(\d{2,4}))?\s*UHD/);
+  // Auto-Erkennung nur aus dem Namen (z. B. „… (324 UHD)“) – kategorieunabhängig
+  const m=e.name.match(/(\d{2,4})(?:\s*[–-]+\s*(\d{2,4}))?\s*UHD/);
   if(m)return {y:parseInt(m[1],10),label:(m[2]?`${m[1]}–${m[2]}`:m[1])+' UHD'};
   return null;
 }
