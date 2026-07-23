@@ -221,6 +221,12 @@
     color:var(--ink-soft);font-size:12.5px;font-weight:600;cursor:pointer;font-family:var(--sans)}
   .echip:hover{background:var(--card2)}
   .echip.on{background:var(--accent-soft);border-color:var(--accent);color:var(--ink)}
+  /* Navigierbare Überschriften */
+  .crumb .cl{cursor:pointer;color:var(--ink-soft);text-decoration:underline;
+    text-decoration-color:var(--line2);text-underline-offset:4px;text-decoration-thickness:1px}
+  .crumb .cl:hover{color:var(--accent);text-decoration-color:var(--accent)}
+  .grp-h .gh{cursor:pointer;border-bottom:1px solid transparent}
+  .grp-h .gh:hover{color:var(--accent);border-bottom-color:var(--accent)}
 </style>
 </head>
 <body>
@@ -315,7 +321,7 @@
 
 <script>
 'use strict';
-const APP_VERSION='v0.6';
+const APP_VERSION='v0.7';
 const KV_BASE='https://kv-store.neuzcore.workers.dev';
 const KV_KEY='codex/data';
 const LS_DATA='codex_data', LS_SECRET='codex_secret', LS_SYNC='codex_lastsync';
@@ -407,9 +413,15 @@ function renderLastSync(){const t=localStorage.getItem(LS_SYNC);
   $('#lastSyncTxt').textContent=t?('Zuletzt: '+new Date(t).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})):'Noch nie';}
 
 /* tree helpers */
-function orderedCats(){
-  return [...new Set(state.entries.map(e=>e.kategorie))].sort((a,b)=>a.localeCompare(b,'de'));
+const CHAPTER='Kapitel';
+function allCats(){   // für Export: alles, Kapitel ans Ende
+  const c=[...new Set(state.entries.map(e=>e.kategorie))].sort((a,b)=>a.localeCompare(b,'de'));
+  return [...c.filter(x=>x!==CHAPTER),...c.filter(x=>x===CHAPTER)];
 }
+function navCats(){   // für Navigation/Liste: ohne Kapitel
+  return [...new Set(state.entries.map(e=>e.kategorie))].filter(c=>c!==CHAPTER).sort((a,b)=>a.localeCompare(b,'de'));
+}
+function orderedCats(){return navCats();}
 function orderedSubs(cat){
   const present=[...new Set(state.entries.filter(e=>e.kategorie===cat).map(e=>e.unterkategorie||''))];
   const named=present.filter(s=>s).sort((a,b)=>a.localeCompare(b,'de'));
@@ -423,9 +435,14 @@ const countSub=(c,s)=>state.entries.filter(e=>e.kategorie===c&&(e.unterkategorie
 function renderNav(){
   const nav=$('#nav');let h='';
   const datedCount=state.entries.filter(e=>effectiveYear(e)).length;
+  const loreCount=state.entries.filter(e=>e.kategorie!==CHAPTER).length;
+  const kapCount=countCat(CHAPTER);
   const allOn=sel.cat===''&&sel.view==='';
   h+=`<div class="nav-item ${allOn?'on':''}" data-cat="" data-sub="">
-        <span class="caret none"></span>Alle Einträge<span class="cnt">${state.entries.length}</span></div>`;
+        <span class="caret none"></span>Alle Einträge<span class="cnt">${loreCount}</span></div>`;
+  if(kapCount)h+=`<div class="nav-item ${sel.cat===CHAPTER?'on':''}" data-cat="${CHAPTER}" data-sub="">
+        <span class="caret none"></span>Kapitelübersicht<span class="cnt">${kapCount}</span></div>`;
+  h+=`<div class="nav-divider"></div>`;
   h+=`<div class="nav-item ${sel.view==='recent'?'on':''}" data-view="recent">
         <span class="caret none"></span>Zuletzt geändert</div>`;
   h+=`<div class="nav-item ${sel.view==='timeline'?'on':''}" data-view="timeline">
@@ -475,6 +492,7 @@ function baseFilter(){
   const q=$('#q').value.trim().toLowerCase();
   let items=state.entries.slice();
   if(sel.cat)items=items.filter(e=>e.kategorie===sel.cat);
+  else if(!q)items=items.filter(e=>e.kategorie!==CHAPTER);  // Kapitel haben eigene Ansicht
   if(sel.sub)items=items.filter(e=>(e.unterkategorie||'')===sel.sub);
   if(q)items=items.filter(e=>(e.name+' '+e.text+' '+e.kategorie+' '+(e.unterkategorie||'')).toLowerCase().includes(q));
   return items;
@@ -495,36 +513,54 @@ function cardHTML(e,extra){
   return `<div class="card" data-id="${e.id}"><div class="top"><div class="nm">${esc(e.name)}</div>${kap}</div>
     ${path}${snip?`<div class="snip">${esc(snip)}</div>`:''}${extra||''}</div>`;
 }
+function crumbHTML(count){
+  if(sel.cat===CHAPTER)
+    return `<div class="crumb">Kapitelübersicht<span class="cnt">${count}</span></div>`;
+  if(!sel.cat)
+    return `<div class="crumb">Alle Einträge<span class="cnt">${count}</span></div>`;
+  let p=`<span class="cl" data-root="1">Alle Einträge</span> <span class="sep">›</span> `;
+  p+= sel.sub
+    ? `<span class="cl" data-gcat="${esc(sel.cat)}">${esc(sel.cat)}</span> <span class="sep">›</span> ${esc(sel.sub)}`
+    : esc(sel.cat);
+  return `<div class="crumb">${p}<span class="cnt">${count}</span></div>`;
+}
+function bindCrumb(){
+  const r=$('#main .crumb .cl[data-root]');if(r)r.onclick=()=>selectNode('','',true);
+  const c=$('#main .crumb .cl[data-gcat]');if(c)c.onclick=()=>selectNode(c.dataset.gcat,'',true);
+  $$('#main .grp-h .gh[data-gcat]').forEach(g=>g.onclick=()=>selectNode(g.dataset.gcat,'',true));
+  $$('#main .grp-h .gh[data-gsub]').forEach(g=>g.onclick=()=>selectNode(sel.cat,g.dataset.gsub,false));
+}
 function renderList(){
   if(sel.view==='recent')return renderRecent();
   if(sel.view==='timeline')return renderTimeline();
   if(sel.view==='trash')return renderTrash();
   const main=$('#main');
-  const crumb=`<div class="crumb">${sel.cat?esc(sel.cat):'Alle Einträge'}${sel.sub?` <span class="sep">›</span> ${esc(sel.sub)}`:''}
-    <span class="cnt">${baseFilter().length}</span></div>`;
   const items=baseFilter();
+  const crumb=crumbHTML(items.length);
   if(!items.length){
     main.innerHTML=crumb+`<div class="empty"><div class="big">Nichts gefunden</div>${state.entries.length?'Andere Suche oder Auswahl versuchen.':'Tippe „+“ oder importiere deine Lore über ⚙ → Importieren.'}</div>`;
-    bindCards();return;
+    bindCards();bindCrumb();return;
   }
   let body='';
   if(sel.cat && !sel.sub){
     for(const s of orderedSubs(sel.cat)){
       const grp=sortItems(items.filter(e=>(e.unterkategorie||'')===s));
       if(!grp.length)continue;
-      if(sel.cat!=='Kapitel')body+=`<div class="grp-h">${esc(s||'Ohne Unterkategorie')}<span class="l"></span></div>`;
+      if(sel.cat!==CHAPTER)body+=`<div class="grp-h">${s?`<span class="gh" data-gsub="${esc(s)}">${esc(s)}</span>`:'Ohne Unterkategorie'}<span class="l"></span></div>`;
       body+=grp.map(e=>cardHTML(e)).join('');
     }
   } else if(!sel.cat){
-    for(const c of orderedCats()){
+    const cats=[...navCats(),...(items.some(e=>e.kategorie===CHAPTER)?[CHAPTER]:[])];
+    for(const c of cats){
       const grp=sortItems(items.filter(e=>e.kategorie===c));
       if(!grp.length)continue;
-      body+=`<div class="grp-h">${esc(c)}<span class="l"></span></div>`+grp.map(e=>cardHTML(e)).join('');
+      body+=`<div class="grp-h"><span class="gh" data-gcat="${esc(c)}">${esc(c)}</span><span class="l"></span></div>`
+        +grp.map(e=>cardHTML(e)).join('');
     }
   } else {
     body=sortItems(items).map(e=>cardHTML(e)).join('');
   }
-  main.innerHTML=crumb+body;bindCards();
+  main.innerHTML=crumb+body;bindCards();bindCrumb();
 }
 
 /* --- Zuletzt geändert --- */
@@ -689,7 +725,7 @@ function download(name,text,type){const b=new Blob([text],{type});const u=URL.cr
 function exportMarkdown(){
   const d=new Date().toLocaleDateString('de-DE');
   let md=`**Echo der Leere — Lore & Plot**\n\n*Codex-Export · Stand ${d} · ${state.entries.length} Einträge*\n\n`;
-  for(const cat of orderedCats()){
+  for(const cat of allCats()){
     md+=`# ${cat}\n\n`;
     for(const s of orderedSubs(cat)){
       const grp=state.entries.filter(e=>e.kategorie===cat&&(e.unterkategorie||'')===s)
