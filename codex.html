@@ -42,7 +42,7 @@
     padding:5px 9px;border-radius:20px;border:1px solid var(--line);background:var(--card)}
   .dot{width:7px;height:7px;border-radius:50%;background:var(--ink-dim)}
   .sync.ok .dot{background:var(--ok)} .sync.busy .dot{background:var(--warn);animation:pulse 1s infinite}
-  .sync.err .dot{background:var(--danger)}
+  .sync.err .dot{background:var(--danger)} .sync.warn .dot{background:var(--warn)}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
   .toolrow{display:flex;gap:10px;align-items:center}
   .search{position:relative;flex:1;min-width:0}
@@ -227,6 +227,29 @@
   .crumb .cl:hover{color:var(--accent);text-decoration-color:var(--accent)}
   .grp-h .gh{cursor:pointer;border-bottom:1px solid transparent}
   .grp-h .gh:hover{color:var(--accent);border-bottom-color:var(--accent)}
+  /* Logline & Status */
+  .card .logline{font-family:var(--read);font-style:italic;font-size:14px;color:var(--ink-soft);margin-top:6px;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.45}
+  .det-logline{font-family:var(--read);font-style:italic;font-size:17px;color:var(--ink-soft);
+    line-height:1.5;margin:10px 0 2px;padding-left:12px;border-left:2px solid var(--line2)}
+  .badge{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+    padding:2px 8px;border-radius:20px;border:1px solid var(--line2);color:var(--ink-dim);white-space:nowrap}
+  .badge.st-plan{color:var(--ink-dim);border-color:var(--line2)}
+  .badge.st-work{color:#8a6d28;border-color:#d8c78e;background:#fbf4de}
+  .badge.st-done{color:var(--accent);border-color:#b9c2df;background:var(--accent-soft)}
+  .badge.st-rev{color:#3e7d54;border-color:#a9d3ba;background:#e9f4ec}
+  .card .top .badge{flex:0 0 auto;align-self:center}
+  .board{display:flex;flex-wrap:wrap;gap:7px;margin:2px 4px 14px}
+  .board .kpi{display:flex;align-items:center;gap:7px;padding:6px 12px;border:1px solid var(--line);
+    border-radius:20px;background:var(--card);cursor:pointer;font-size:12.5px;font-weight:600;color:var(--ink-soft)}
+  .board .kpi:hover{background:var(--card2)}
+  .board .kpi.on{border-color:var(--accent);background:var(--accent-soft);color:var(--ink)}
+  .board .kpi b{font-family:var(--read);font-weight:600;color:var(--ink)}
+  .nav-label{font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;
+    color:var(--ink-dim);padding:4px 10px 6px}
+  .lager-tag{color:var(--accent);font-weight:600}
+  .det-teil{font-size:13px;color:var(--ink-soft);margin-top:8px}
+  .det-teil b{color:var(--accent)}
 </style>
 </head>
 <body>
@@ -269,6 +292,8 @@
   <div class="grab"></div>
   <h2 id="edTitle">Neuer Eintrag</h2>
   <div class="fld"><label>Name</label><input id="edName" placeholder="z. B. Chimäre"></div>
+  <div class="fld"><label>Logline (optional)</label>
+    <input id="edLogline" placeholder="Ein Satz – erscheint in Liste &amp; Export"></div>
   <div class="fld"><label>Kategorie</label>
     <input id="edCat" list="catList" placeholder="Kategorie"><datalist id="catList"></datalist>
     <div class="echips" id="catChips"></div></div>
@@ -280,7 +305,14 @@
       <input id="edJahr" placeholder="z. B. 324 UHD"></div>
   </div>
   <div class="hint" id="subHint" style="margin:-8px 0 14px">Feste Gliederung; neue Unterkategorie einfach eintippen. Jahr erscheint im Zeitstrahl.</div>
-  <div class="fld" id="kapWrap" style="display:none"><label>Kapitel-Nr.</label><input id="edKap" type="number" min="1" placeholder="1"></div>
+  <div class="fld" id="lagerWrap"><label>Lager</label><div class="echips" id="lagerChips"></div></div>
+  <div class="fld" id="teilVonWrap"><label>Teil von (optional)</label>
+    <input id="edTeilVon" list="teilVonList" placeholder="z. B. HID"><datalist id="teilVonList"></datalist>
+    <div class="hint">Übergeordnete Einheit – macht Ketten wie Hegemonie › HID › Agentur lesbar.</div></div>
+  <div id="kapWrap" style="display:none">
+    <div class="fld"><label>Kapitel-Nr.</label><input id="edKap" type="number" min="1" placeholder="1"></div>
+    <div class="fld"><label>Status</label><div class="echips" id="statusChips"></div></div>
+  </div>
   <div class="fld"><label>Text</label>
     <textarea id="edText" placeholder="Freitext. Zeilen mit „- “ werden als Liste dargestellt."></textarea>
     <div class="hint">Markdown-leicht: „- “ = Aufzählung, Leerzeile = neuer Absatz.</div></div>
@@ -321,10 +353,10 @@
 
 <script>
 'use strict';
-const APP_VERSION='v0.7';
+const APP_VERSION='v0.9';
 const KV_BASE='https://kv-store.neuzcore.workers.dev';
 const KV_KEY='codex/data';
-const LS_DATA='codex_data', LS_SECRET='codex_secret', LS_SYNC='codex_lastsync';
+const LS_DATA='codex_data', LS_SECRET='codex_secret', LS_SYNC='codex_lastsync', LS_SYNCED='codex_syncedrev';
 
 const CAT_ORDER=['Welt','Politik','Ereignisse','Organisationen','Personen','Orte','Technologie','Kapitel'];
 const SUBCATS={
@@ -332,15 +364,17 @@ const SUBCATS={
   'Politik':['Fraktionen','Institutionen'],
   'Organisationen':['Geheimdienste','Gegner'],
   'Ereignisse':['Kriege','Schlachten'],
-  'Personen':['Hegemonie','Resonanz','Grenzwelten','Zivil','Sonstige'],
+  'Personen':[],
   'Orte':['Welten','Stationen','Regionen'],
   'Technologie':['Raumschiffe & Antrieb','Waffen','Ausrüstung','Werkstoffe & Substanzen'],
   'Kapitel':[]
 };
+const LAGER=['Hegemonie','Grenzwelten','Resonanz','Neutral'];
 
 let state={entries:[],trash:[]};
-let sel={cat:'',sub:'',view:''};   // view: '' | 'recent' | 'timeline' | 'trash'
+let sel={cat:'',sub:'',view:'',lager:''};   // view: '' | 'recent' | 'timeline' | 'trash'; lager: Fraktionsfilter
 let sortMode='name';
+let kapFilter='';   // Statusfilter in der Kapitelübersicht
 let expanded=new Set();
 let editingId=null;
 
@@ -364,10 +398,40 @@ function mdToHtml(txt){
 function inl(s){return esc(s).replace(/\*([^*]+)\*/g,'<em>$1</em>');}
 
 /* persistence + migration */
+const KAP_STATUS=['geplant','in Arbeit','geschrieben','überarbeitet'];
+function statusClass(s){return {'geplant':'st-plan','in Arbeit':'st-work','geschrieben':'st-done','überarbeitet':'st-rev'}[s]||'';}
 function migrate(){
   if(!Array.isArray(state.trash))state.trash=[];
-  for(const e of state.entries){if(e.unterkategorie===undefined)e.unterkategorie='';if(e.jahr===undefined)e.jahr='';delete e.tags;}
+  for(const e of state.entries){
+    if(e.unterkategorie===undefined)e.unterkategorie='';
+    if(e.jahr===undefined)e.jahr='';
+    if(e.logline===undefined)e.logline='';
+    if(e.status===undefined)e.status='';
+    if(e.lager===undefined)e.lager='';
+    if(e.teilVon===undefined)e.teilVon='';
+    delete e.tags;
+  }
+  if(!state.v9lager){                 // Einmalige Umstellung: Zugehörigkeit -> Lager
+    const map={'Hegemonie':'Hegemonie','Resonanz':'Resonanz','Grenzwelten':'Grenzwelten','Zivil':'Neutral'};
+    for(const e of state.entries){
+      if(e.kategorie==='Personen'){
+        if(!e.lager && map[e.unterkategorie])e.lager=map[e.unterkategorie];
+        e.unterkategorie='';           // Personen wird flach, Zugehörigkeit steckt im Lager
+      }
+    }
+    const seed={'Die Hegemonie':'Hegemonie','Die Grenzwelten':'Grenzwelten',
+      'Rat für innere Ordnung':'Hegemonie','HID -- Hegemonialer Informations-Dienst':'Hegemonie',
+      'Die Resonanz':'Resonanz','Aeterna Prime':'Hegemonie'};
+    for(const e of state.entries)if(!e.lager && seed[e.name])e.lager=seed[e.name];
+    state.v9lager=true;
+  }
+  if(!state.rev)state.rev=new Date().toISOString();
 }
+function nowRev(){return new Date().toISOString();}
+function markChange(){state.rev=nowRev();}
+function getSynced(){return localStorage.getItem(LS_SYNCED)||'';}
+function setSynced(v){localStorage.setItem(LS_SYNCED,v||'');}
+function hasLocalChanges(){return !!state.rev && state.rev!==getSynced();}
 function fmtDate(iso){try{return new Date(iso).toLocaleDateString('de-DE',{day:'2-digit',month:'short',year:'numeric'});}catch(e){return '';}}
 function fmtDateTime(iso){try{return new Date(iso).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return '';}}
 /* Zeitstrahl: Jahr aus Feld oder – als Rückfall – aus Name/Text (Muster „NNN UHD“) */
@@ -381,31 +445,61 @@ function effectiveYear(e){
 }
 function loadLocal(){try{const d=JSON.parse(localStorage.getItem(LS_DATA));if(d&&Array.isArray(d.entries)){state=d;migrate();}}catch(e){}}
 function saveLocal(){localStorage.setItem(LS_DATA,JSON.stringify(state));}
-async function save(){saveLocal();render();pushRemote();}
+async function save(){markChange();saveLocal();render();pushRemote();}
 
-/* cloud sync */
+/* cloud sync (mit Konfliktschutz) */
 function secret(){return localStorage.getItem(LS_SECRET)||'';}
 function setSync(cls,txt){$('#syncPill').className='sync '+cls;$('#syncTxt').textContent=txt;}
+function adoptRemote(d){
+  state=d;migrate();
+  state.rev=d.rev||nowRev();
+  setSynced(state.rev);saveLocal();render();
+}
 async function pullRemote(silent){
   const s=secret();if(!s){setSync('','Lokal');return;}
   setSync('busy','Sync…');
   try{
     const r=await fetch(`${KV_BASE}/${KV_KEY}`,{headers:{'Authorization':'Bearer '+s}});
-    if(r.status===404){await pushRemote();setSync('ok','Synchron');return;}
+    if(r.status===404){await pushRemote(true);return;}
     if(!r.ok)throw new Error('HTTP '+r.status);
     const d=await r.json();
-    if(d&&Array.isArray(d.entries)){state=d;migrate();saveLocal();render();}
-    stamp();setSync('ok','Synchron');if(!silent)toast('Aus der Cloud geladen');
+    if(!d||!Array.isArray(d.entries)){setSync('ok','Synchron');return;}
+    const rrev=d.rev||'';
+    if(rrev && rrev===getSynced()){                 // Cloud unverändert seit letztem Abgleich
+      setSync(hasLocalChanges()?'warn':'ok',hasLocalChanges()?'Nicht hochgeladen':'Synchron');
+      return;
+    }
+    if(hasLocalChanges()){                           // beide Seiten geändert -> Konflikt
+      if(silent){setSync('warn','Abgleich nötig');return;}
+      const ov=confirm('⚠ Cloud und lokale Daten weichen voneinander ab (Änderung auf einem anderen Gerät).\n\nOK = Cloud übernehmen und lokale Änderungen verwerfen\nAbbrechen = lokale Version behalten (später über „Sync“ hochladen)');
+      if(ov){adoptRemote(d);stamp();setSync('ok','Synchron');toast('Cloud übernommen');}
+      else{setSync('warn','Abgleich nötig');}
+      return;
+    }
+    adoptRemote(d);stamp();setSync('ok','Synchron');if(!silent)toast('Aus der Cloud geladen');
   }catch(e){setSync('err','Fehler');if(!silent)toast('Sync-Fehler: '+e.message);}
 }
-async function pushRemote(){
+async function pushRemote(forceInitial){
   const s=secret();if(!s){setSync('','Lokal');return;}
+  if(!state.rev)state.rev=nowRev();
   setSync('busy','Sync…');
   try{
-    state.version=4;state.app='codex';state.exported=new Date().toISOString();
+    // Erst prüfen, ob die Cloud seit unserem letzten Abgleich fortgeschritten ist
+    if(!forceInitial){
+      const chk=await fetch(`${KV_BASE}/${KV_KEY}`,{headers:{'Authorization':'Bearer '+s}});
+      if(chk.ok){
+        const cd=await chk.json();const crev=(cd&&cd.rev)||'';
+        if(crev && crev!==getSynced() && crev!==state.rev){
+          const ov=confirm('⚠ Die Cloud wurde auf einem anderen Gerät geändert.\n\nOK = Deine Version hochladen und die Cloud überschreiben\nAbbrechen = nicht hochladen (Cloud bleibt; über „Sync“ laden)');
+          if(!ov){setSync('warn','Abgleich nötig');return;}
+        }
+      }
+    }
+    state.version=6;state.app='codex';state.exported=new Date().toISOString();
     const r=await fetch(`${KV_BASE}/${KV_KEY}`,{method:'PUT',
       headers:{'Authorization':'Bearer '+s,'Content-Type':'application/json'},body:JSON.stringify(state)});
-    if(!r.ok)throw new Error('HTTP '+r.status);stamp();setSync('ok','Synchron');
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    setSynced(state.rev);stamp();setSync('ok','Synchron');
   }catch(e){setSync('err','Fehler');toast('Upload-Fehler: '+e.message);}
 }
 function stamp(){localStorage.setItem(LS_SYNC,new Date().toISOString());renderLastSync();}
@@ -449,19 +543,26 @@ function renderNav(){
         <span class="caret none"></span>Zeitstrahl<span class="cnt">${datedCount}</span></div>`;
   h+=`<div class="nav-item ${sel.view==='trash'?'on':''}" data-view="trash">
         <span class="caret none"></span>Papierkorb<span class="cnt">${state.trash.length}</span></div>`;
+  const lagerCounts=LAGER.map(l=>[l,state.entries.filter(e=>e.lager===l).length]).filter(x=>x[1]>0);
+  if(lagerCounts.length){
+    h+=`<div class="nav-divider"></div><div class="nav-label">Lager</div>`;
+    for(const [l,n] of lagerCounts)
+      h+=`<div class="nav-item ${sel.lager===l?'on':''}" data-lager="${esc(l)}">
+            <span class="caret none"></span>${esc(l)}<span class="cnt">${n}</span></div>`;
+  }
   h+=`<div class="nav-divider"></div>`;
   for(const cat of orderedCats()){
     const subs=orderedSubs(cat).filter(s=>s!=='');
     const hasSubs=subs.length>0;
     const isOpen=expanded.has(cat);
-    const active=sel.view===''&&sel.cat===cat&&sel.sub==='';
+    const active=sel.view===''&&!sel.lager&&sel.cat===cat&&sel.sub==='';
     h+=`<div class="nav-cat"><div class="nav-item ${active?'on':''}" data-cat="${esc(cat)}" data-sub="">
           <span class="caret ${hasSubs?(isOpen?'open':''):'none'}" data-toggle="${esc(cat)}">▸</span>
           ${esc(cat)}<span class="cnt">${countCat(cat)}</span></div>`;
     if(hasSubs&&isOpen){
       h+=`<div class="nav-subs">`;
       for(const s of subs)
-        h+=`<div class="nav-sub ${sel.view===''&&sel.cat===cat&&sel.sub===s?'on':''}" data-cat="${esc(cat)}" data-sub="${esc(s)}">
+        h+=`<div class="nav-sub ${sel.view===''&&!sel.lager&&sel.cat===cat&&sel.sub===s?'on':''}" data-cat="${esc(cat)}" data-sub="${esc(s)}">
               ${esc(s)}<span class="cnt">${countSub(cat,s)}</span></div>`;
       h+=`</div>`;
     }
@@ -472,18 +573,23 @@ function renderNav(){
     ev.stopPropagation();const cat=c.dataset.toggle;
     if(expanded.has(cat))expanded.delete(cat);else expanded.add(cat);renderNav();});
   $$('#nav .nav-item[data-view]').forEach(it=>it.onclick=()=>selectView(it.dataset.view));
+  $$('#nav .nav-item[data-lager]').forEach(it=>it.onclick=()=>selectLager(it.dataset.lager));
   $$('#nav .nav-item[data-cat]').forEach(it=>it.onclick=()=>selectNode(it.dataset.cat,it.dataset.sub,true));
   $$('#nav .nav-sub').forEach(it=>it.onclick=()=>selectNode(it.dataset.cat,it.dataset.sub,false));
 }
 function selectNode(cat,sub,isCat){
-  sel={cat,sub,view:''};
+  sel={cat,sub,view:'',lager:''};
   if(cat&&isCat)expanded.add(cat);
   if(cat==='Kapitel'){sortMode='kapitel';$('#sort').value='kapitel';}
   else if(sortMode==='kapitel'){sortMode='name';$('#sort').value='name';}
   closeNav();renderNav();renderList();
 }
+function selectLager(l){
+  sel={cat:'',sub:'',view:'',lager:l};
+  closeNav();renderNav();renderList();
+}
 function selectView(view){
-  sel={cat:'',sub:'',view};
+  sel={cat:'',sub:'',view,lager:''};
   closeNav();renderNav();renderList();
 }
 
@@ -494,7 +600,8 @@ function baseFilter(){
   if(sel.cat)items=items.filter(e=>e.kategorie===sel.cat);
   else if(!q)items=items.filter(e=>e.kategorie!==CHAPTER);  // Kapitel haben eigene Ansicht
   if(sel.sub)items=items.filter(e=>(e.unterkategorie||'')===sel.sub);
-  if(q)items=items.filter(e=>(e.name+' '+e.text+' '+e.kategorie+' '+(e.unterkategorie||'')).toLowerCase().includes(q));
+  if(sel.lager)items=items.filter(e=>e.lager===sel.lager);
+  if(q)items=items.filter(e=>(e.name+' '+e.text+' '+e.kategorie+' '+(e.unterkategorie||'')+' '+(e.lager||'')+' '+(e.teilVon||'')).toLowerCase().includes(q));
   return items;
 }
 function sortItems(items){
@@ -506,14 +613,25 @@ function sortItems(items){
   });
 }
 function cardHTML(e,extra){
-  const kap=e.kategorie==='Kapitel'&&e.kapitel?`<span class="kap">${e.kapitel}</span>`:'';
-  const snip=(e.text||'').replace(/^-\s+/gm,'').replace(/\n+/g,' ').replace(/\*/g,'').trim();
-  const path=(sel.view===''&&sel.cat&&sel.sub)?''
-    :`<div class="path">${esc(e.kategorie)}${e.unterkategorie?` · <b>${esc(e.unterkategorie)}</b>`:''}</div>`;
-  return `<div class="card" data-id="${e.id}"><div class="top"><div class="nm">${esc(e.name)}</div>${kap}</div>
-    ${path}${snip?`<div class="snip">${esc(snip)}</div>`:''}${extra||''}</div>`;
+  const kap=e.kategorie===CHAPTER&&e.kapitel?`<span class="kap">${e.kapitel}</span>`:'';
+  const badge=e.kategorie===CHAPTER&&e.status?`<span class="badge ${statusClass(e.status)}">${esc(e.status)}</span>`:'';
+  const right=kap||badge?`<div style="display:flex;gap:8px;align-items:center;flex:0 0 auto">${badge}${kap}</div>`:'';
+  const bits=[esc(e.kategorie)];
+  if(e.unterkategorie)bits.push(`<b>${esc(e.unterkategorie)}</b>`);
+  if(e.lager&&sel.lager!==e.lager)bits.push(`<span class="lager-tag">${esc(e.lager)}</span>`);
+  if(e.teilVon)bits.push(`◂ ${esc(e.teilVon)}`);
+  const path=(sel.view===''&&sel.cat&&sel.sub&&!e.lager&&!e.teilVon)?''
+    :`<div class="path">${bits.join(' · ')}</div>`;
+  let preview;
+  if(e.logline&&e.logline.trim()) preview=`<div class="logline">${esc(e.logline.trim())}</div>`;
+  else{const snip=(e.text||'').replace(/^-\s+/gm,'').replace(/\n+/g,' ').replace(/\*/g,'').trim();
+       preview=snip?`<div class="snip">${esc(snip)}</div>`:'';}
+  return `<div class="card" data-id="${e.id}"><div class="top"><div class="nm">${esc(e.name)}</div>${right}</div>
+    ${path}${preview}${extra||''}</div>`;
 }
 function crumbHTML(count){
+  if(sel.lager)
+    return `<div class="crumb">Lager: ${esc(sel.lager)}<span class="cnt">${count}</span></div>`;
   if(sel.cat===CHAPTER)
     return `<div class="crumb">Kapitelübersicht<span class="cnt">${count}</span></div>`;
   if(!sel.cat)
@@ -534,6 +652,7 @@ function renderList(){
   if(sel.view==='recent')return renderRecent();
   if(sel.view==='timeline')return renderTimeline();
   if(sel.view==='trash')return renderTrash();
+  if(sel.cat===CHAPTER && !$('#q').value.trim())return renderChapters();
   const main=$('#main');
   const items=baseFilter();
   const crumb=crumbHTML(items.length);
@@ -622,16 +741,45 @@ function renderTrash(){
   $$('#main [data-purge]').forEach(b=>b.onclick=()=>purgeEntry(b.dataset.purge));
 }
 function bindCards(){$$('#main .card').forEach(c=>c.onclick=()=>openDetail(c.dataset.id));}
+
+/* --- Kapitelübersicht mit Fortschritts-Board --- */
+function renderChapters(){
+  const all=state.entries.filter(e=>e.kategorie===CHAPTER)
+    .sort((a,b)=>(a.kapitel||9999)-(b.kapitel||9999)||a.name.localeCompare(b.name,'de'));
+  const count=s=>all.filter(e=>(e.status||'')===s).length;
+  const done=all.filter(e=>e.status==='geschrieben'||e.status==='überarbeitet').length;
+  const crumb=`<div class="crumb">Kapitelübersicht<span class="cnt">${done}/${all.length} fertig</span></div>`;
+  let board=`<div class="board">
+    <div class="kpi ${kapFilter===''?'on':''}" data-st=""><b>${all.length}</b> Alle</div>`;
+  for(const s of KAP_STATUS)
+    board+=`<div class="kpi ${kapFilter===s?'on':''}" data-st="${esc(s)}"><span class="badge ${statusClass(s)}">${esc(s)}</span><b>${count(s)}</b></div>`;
+  const noStatus=all.filter(e=>!e.status).length;
+  if(noStatus)board+=`<div class="kpi ${kapFilter==='—'?'on':''}" data-st="—"><b>${noStatus}</b> ohne Status</div>`;
+  board+=`</div>`;
+  let list=all;
+  if(kapFilter==='—')list=all.filter(e=>!e.status);
+  else if(kapFilter)list=all.filter(e=>e.status===kapFilter);
+  const body=list.length?list.map(e=>cardHTML(e)).join('')
+    :`<div class="empty">Keine Kapitel mit diesem Status.</div>`;
+  $('#main').innerHTML=crumb+board+body;
+  bindCards();
+  $$('#main .board .kpi').forEach(k=>k.onclick=()=>{kapFilter=k.dataset.st;renderChapters();});
+}
+
 function render(){renderNav();renderList();$('#statCount').textContent=state.entries.length;}
 
 /* detail */
 function openDetail(id){
   const e=state.entries.find(x=>x.id===id);if(!e)return;editingId=id;
-  const kap=e.kategorie==='Kapitel'&&e.kapitel?` · Kap. ${e.kapitel}`:'';
+  const kap=e.kategorie===CHAPTER&&e.kapitel?` · Kap. ${e.kapitel}`:'';
   const sub=e.unterkategorie?` › ${esc(e.unterkategorie)}`:'';
   const jahr=e.jahr&&e.jahr.trim()?` · ${esc(e.jahr.trim())}`:'';
-  $('#detBody').innerHTML=`<div class="det-cat">${esc(e.kategorie)}${sub}${jahr}${kap}</div>
-    <div class="det-nm">${esc(e.name)}</div>
+  const status=e.kategorie===CHAPTER&&e.status?` <span class="badge ${statusClass(e.status)}">${esc(e.status)}</span>`:'';
+  const lg=e.lager?` · ${esc(e.lager)}`:'';
+  const logline=e.logline&&e.logline.trim()?`<div class="det-logline">${esc(e.logline.trim())}</div>`:'';
+  const teil=e.teilVon?`<div class="det-teil">Teil von: <b>${esc(e.teilVon)}</b></div>`:'';
+  $('#detBody').innerHTML=`<div class="det-cat">${esc(e.kategorie)}${sub}${lg}${jahr}${kap}${status}</div>
+    <div class="det-nm">${esc(e.name)}</div>${logline}${teil}
     <div class="det-body">${mdToHtml(e.text)||'<p><em>Kein Text.</em></p>'}</div>`;
   openSheet('sheetDetail');
 }
@@ -647,7 +795,25 @@ function toggleFields(){
   $('#kapWrap').style.display=isKap?'block':'none';
   $('#subRow').style.display=isKap?'none':'flex';
   $('#subHint').style.display=isKap?'none':'block';
-  fillSubList(cat);renderSubChips();
+  $('#lagerWrap').style.display=isKap?'none':'block';
+  $('#teilVonWrap').style.display=isKap?'none':'block';
+  fillSubList(cat);renderSubChips();fillTeilVonList();renderLagerChips();if(isKap)renderStatusChips();
+}
+let edStatus='',edLager='';
+function renderStatusChips(){
+  $('#statusChips').innerHTML=['',...KAP_STATUS].map(s=>
+    `<span class="echip ${s===edStatus?'on':''}" data-st="${esc(s)}">${s||'—'}</span>`).join('');
+  $$('#statusChips .echip').forEach(ch=>ch.onclick=()=>{edStatus=ch.dataset.st;renderStatusChips();});
+}
+function renderLagerChips(){
+  $('#lagerChips').innerHTML=['',...LAGER].map(l=>
+    `<span class="echip ${l===edLager?'on':''}" data-l="${esc(l)}">${l||'—'}</span>`).join('');
+  $$('#lagerChips .echip').forEach(ch=>ch.onclick=()=>{edLager=ch.dataset.l;renderLagerChips();});
+}
+function fillTeilVonList(){
+  const vals=new Set(state.entries.map(e=>e.teilVon).filter(Boolean));
+  for(const e of state.entries)if(['Politik','Organisationen'].includes(e.kategorie))vals.add(e.name);
+  $('#teilVonList').innerHTML=[...vals].sort((a,b)=>a.localeCompare(b,'de')).map(v=>`<option value="${esc(v)}">`).join('');
 }
 function renderCatChips(){
   const cur=$('#edCat').value.trim();
@@ -667,15 +833,18 @@ function openEditor(id){
     const e=state.entries.find(x=>x.id===id);
     $('#edTitle').textContent='Eintrag bearbeiten';
     $('#edName').value=e.name;$('#edCat').value=e.kategorie;$('#edSub').value=e.unterkategorie||'';
-    $('#edJahr').value=e.jahr||'';
-    $('#edText').value=e.text;$('#edKap').value=e.kapitel||'';$('#edDelete').style.display='block';
+    $('#edLogline').value=e.logline||'';$('#edJahr').value=e.jahr||'';
+    $('#edTeilVon').value=e.teilVon||'';edLager=e.lager||'';
+    $('#edText').value=e.text;$('#edKap').value=e.kapitel||'';edStatus=e.status||'';
+    $('#edDelete').style.display='block';
   }else{
     $('#edTitle').textContent='Neuer Eintrag';
     $('#edName').value='';$('#edCat').value=sel.cat||'';$('#edSub').value=sel.sub||'';
-    $('#edJahr').value='';
-    $('#edText').value='';$('#edKap').value='';$('#edDelete').style.display='none';
+    $('#edLogline').value='';$('#edJahr').value='';
+    $('#edTeilVon').value='';edLager=sel.lager||'';
+    $('#edText').value='';$('#edKap').value='';edStatus='';$('#edDelete').style.display='none';
   }
-  toggleFields();renderCatChips();openSheet('sheetEdit');setTimeout(()=>$('#edName').focus(),300);
+  toggleFields();renderCatChips();renderStatusChips();renderLagerChips();openSheet('sheetEdit');setTimeout(()=>$('#edName').focus(),300);
 }
 function saveEdit(){
   const name=$('#edName').value.trim(),cat=$('#edCat').value.trim();
@@ -683,14 +852,18 @@ function saveEdit(){
   const isKap=cat==='Kapitel';
   const sub=isKap?'':$('#edSub').value.trim();
   const jahr=isKap?'':$('#edJahr').value.trim();
+  const logline=$('#edLogline').value.trim();
+  const status=isKap?edStatus:'';
+  const lager=isKap?'':edLager;
+  const teilVon=isKap?'':$('#edTeilVon').value.trim();
   const text=$('#edText').value;
   const kap=isKap?(parseInt($('#edKap').value)||null):null;
   if(editingId){
     const e=state.entries.find(x=>x.id===editingId);
-    Object.assign(e,{name,kategorie:cat,unterkategorie:sub,jahr,text,updated:new Date().toISOString()});
+    Object.assign(e,{name,kategorie:cat,unterkategorie:sub,jahr,logline,status,lager,teilVon,text,updated:new Date().toISOString()});
     if(isKap)e.kapitel=kap;else delete e.kapitel;
   }else{
-    const e={id:uid(),name,kategorie:cat,unterkategorie:sub,jahr,text,updated:new Date().toISOString()};
+    const e={id:uid(),name,kategorie:cat,unterkategorie:sub,jahr,logline,status,lager,teilVon,text,updated:new Date().toISOString()};
     if(isKap)e.kapitel=kap;state.entries.push(e);
   }
   closeSheets();save();toast('Gespeichert');
@@ -722,6 +895,16 @@ function emptyTrash(){
 /* import / export */
 function download(name,text,type){const b=new Blob([text],{type});const u=URL.createObjectURL(b);
   const a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1500);}
+function entryMd(e,level){
+  let m=`${'#'.repeat(level)} ${e.name}\n\n`;
+  if(e.logline&&e.logline.trim())m+=`> ${e.logline.trim()}\n\n`;
+  if(e.lager)m+=`*Lager: ${e.lager}*\n\n`;
+  if(e.teilVon)m+=`*Teil von: ${e.teilVon}*\n\n`;
+  if(e.kategorie===CHAPTER&&e.status)m+=`*Status: ${e.status}*\n\n`;
+  if(e.jahr&&e.jahr.trim())m+=`*Jahr: ${e.jahr.trim()}*\n\n`;
+  if(e.text.trim())m+=e.text.trim()+'\n\n';
+  return m;
+}
 function exportMarkdown(){
   const d=new Date().toLocaleDateString('de-DE');
   let md=`**Echo der Leere — Lore & Plot**\n\n*Codex-Export · Stand ${d} · ${state.entries.length} Einträge*\n\n`;
@@ -729,16 +912,16 @@ function exportMarkdown(){
     md+=`# ${cat}\n\n`;
     for(const s of orderedSubs(cat)){
       const grp=state.entries.filter(e=>e.kategorie===cat&&(e.unterkategorie||'')===s)
-        .sort((a,b)=>cat==='Kapitel'?((a.kapitel||999)-(b.kapitel||999)):a.name.localeCompare(b.name,'de'));
+        .sort((a,b)=>cat===CHAPTER?((a.kapitel||999)-(b.kapitel||999)):a.name.localeCompare(b.name,'de'));
       if(!grp.length)continue;
-      if(s){md+=`## ${s}\n\n`;for(const e of grp){md+=`### ${e.name}\n\n`;if(e.jahr&&e.jahr.trim())md+=`*Jahr: ${e.jahr.trim()}*\n\n`;if(e.text.trim())md+=e.text.trim()+'\n\n';}}
-      else{for(const e of grp){md+=`## ${e.name}\n\n`;if(e.jahr&&e.jahr.trim())md+=`*Jahr: ${e.jahr.trim()}*\n\n`;if(e.text.trim())md+=e.text.trim()+'\n\n';}}
+      if(s){md+=`## ${s}\n\n`;for(const e of grp)md+=entryMd(e,3);}
+      else{for(const e of grp)md+=entryMd(e,2);}
     }
   }
   download('Lore_Echo_der_Leere.md',md.trim()+'\n','text/markdown');toast('Markdown exportiert');
 }
 function exportJson(){download('codex-backup.json',
-  JSON.stringify({version:4,app:'codex',exported:new Date().toISOString(),entries:state.entries,trash:state.trash},null,2),
+  JSON.stringify({version:5,app:'codex',exported:new Date().toISOString(),rev:state.rev,entries:state.entries,trash:state.trash},null,2),
   'application/json');toast('JSON exportiert');}
 function parseMarkdown(text){
   const lines=text.split('\n');const segs=[];let buf=[];
@@ -764,10 +947,16 @@ function parseMarkdown(text){
   return out;
 }
 function pushEntry(out,cat,sub,name,body){
-  let jahr='';
-  body=(body||'').replace(/^\s*\*Jahr:\s*(.+?)\*\s*$/m,(m,g)=>{jahr=g.trim();return '';}).trim();
-  const e={id:uid(),name,kategorie:cat||'Sonstiges',unterkategorie:sub||'',jahr,text:body,updated:new Date().toISOString()};
-  if(e.kategorie==='Kapitel'){const m=name.match(/Kapitel\s+(\d+)/);if(m)e.kapitel=+m[1];}
+  let jahr='',logline='',status='',lager='',teilVon='';
+  body=(body||'');
+  body=body.replace(/^\s*>\s?(.+?)\s*$/m,(m,g)=>{if(!logline){logline=g.trim();return '';}return m;});
+  body=body.replace(/^\s*\*Lager:\s*(.+?)\*\s*$/m,(m,g)=>{lager=g.trim();return '';});
+  body=body.replace(/^\s*\*Teil von:\s*(.+?)\*\s*$/m,(m,g)=>{teilVon=g.trim();return '';});
+  body=body.replace(/^\s*\*Status:\s*(.+?)\*\s*$/m,(m,g)=>{status=g.trim();return '';});
+  body=body.replace(/^\s*\*Jahr:\s*(.+?)\*\s*$/m,(m,g)=>{jahr=g.trim();return '';});
+  body=body.trim();
+  const e={id:uid(),name,kategorie:cat||'Sonstiges',unterkategorie:sub||'',jahr,logline,status,lager,teilVon,text:body,updated:new Date().toISOString()};
+  if(e.kategorie===CHAPTER){const m=name.match(/Kapitel\s+(\d+)/);if(m)e.kapitel=+m[1];}
   out.push(e);
 }
 function doImport(text,fname){
@@ -776,7 +965,7 @@ function doImport(text,fname){
     if(fname.endsWith('.json')||text.trim().startsWith('{')){
       const d=JSON.parse(text);
       incoming=(d.entries||[]).map(e=>{const r={id:e.id||uid(),name:e.name||'',kategorie:e.kategorie||'Sonstiges',
-        unterkategorie:e.unterkategorie||'',jahr:e.jahr||'',text:e.text||'',updated:e.updated||new Date().toISOString()};
+        unterkategorie:e.unterkategorie||'',jahr:e.jahr||'',logline:e.logline||'',status:e.status||'',lager:e.lager||'',teilVon:e.teilVon||'',text:e.text||'',updated:e.updated||new Date().toISOString()};
         if(e.kapitel)r.kapitel=e.kapitel;return r;});
       if(Array.isArray(d.trash))incomingTrash=d.trash;
     }else incoming=parseMarkdown(text);
@@ -789,7 +978,7 @@ function doImport(text,fname){
   else{
     const key=e=>(e.kategorie+'|'+e.name).toLowerCase();
     const map=new Map(state.entries.map(e=>[key(e),e]));
-    for(const e of incoming){const k=key(e);if(map.has(k))Object.assign(map.get(k),{unterkategorie:e.unterkategorie,jahr:e.jahr,text:e.text,updated:e.updated,...(e.kapitel?{kapitel:e.kapitel}:{})});
+    for(const e of incoming){const k=key(e);if(map.has(k))Object.assign(map.get(k),{unterkategorie:e.unterkategorie,jahr:e.jahr,logline:e.logline,status:e.status,lager:e.lager,teilVon:e.teilVon,text:e.text,updated:e.updated,...(e.kapitel?{kapitel:e.kapitel}:{})});
       else{state.entries.push(e);map.set(k,e);}}
   }
   closeSheets();save();toast(`${incoming.length} importiert (${mode==='replace'?'ersetzt':'zusammengeführt'})`);
