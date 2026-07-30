@@ -1,0 +1,2259 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Neuzcores Gaming Backlog</title>
+<meta name="theme-color" content="#080b14">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gaming Backlog">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#080b14; --surface:#0d1220; --surface2:#141927;
+    --border:#1e2d4a; --accent:#00d4ff; --accent2:#7c3aed;
+    --accent3:#f59e0b; --green:#10b981; --red:#ef4444;
+    --text:#e2e8f0; --muted:#64748b;
+    --glow:0 0 20px rgba(0,212,255,0.3);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:16px;min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+  body::after{content:'';position:fixed;top:-200px;left:50%;transform:translateX(-50%);width:800px;height:400px;background:radial-gradient(ellipse,rgba(0,212,255,0.08) 0%,transparent 70%);pointer-events:none;z-index:0;}
+  .container{max-width:1100px;margin:0 auto;padding:0 20px;position:relative;z-index:1;}
+  header{padding:32px 0 24px;border-bottom:1px solid var(--border);margin-bottom:32px;}
+  .header-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;}
+  .logo{font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;letter-spacing:2px;color:var(--accent);text-shadow:var(--glow);}
+  .logo span{color:var(--text);opacity:0.5;font-weight:400;}
+  .rawg-badge{font-size:10px;background:rgba(0,212,255,0.1);color:var(--accent);border:1px solid rgba(0,212,255,0.2);border-radius:4px;padding:1px 6px;font-weight:700;letter-spacing:1px;}
+  .hdr-btns{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .hdr-btn{background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 14px;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;letter-spacing:0.5px;}
+  .hdr-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+  /* STATS */
+  .stats-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;}
+  .stat-chip{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 18px;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500;}
+  .stat-chip .num{font-family:'Orbitron',sans-serif;font-size:18px;font-weight:700;}
+  .stat-chip.all .num{color:var(--accent);}
+  .stat-chip.beaten .num{color:var(--green);}
+  .stat-chip.backlog .num{color:#a78bfa;}
+  .stat-chip.wishlist .num{color:#94a3b8;}
+
+  /* TABS */
+  .tabs{display:flex;gap:3px;margin-bottom:12px;background:var(--surface);padding:4px;border-radius:10px;border:1px solid var(--border);overflow-x:auto;overflow-y:hidden;flex-wrap:nowrap;scrollbar-width:none;}
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{padding:8px 20px;border-radius:7px;border:none;background:transparent;color:var(--muted);font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.2s;letter-spacing:0.5px;}
+  .tab:hover{color:var(--text);}
+  /* active tab uses its status colour */
+  .tab.active{background:var(--accent);color:var(--bg);box-shadow:0 0 12px rgba(0,212,255,0.4);}
+  .tab.active[data-tab="playing"]{background:#fb923c;color:var(--bg);box-shadow:0 0 12px rgba(251,146,60,0.45);}
+  .tab.active[data-tab="beaten"]{background:var(--green);color:var(--bg);box-shadow:0 0 12px rgba(16,185,129,0.45);}
+  .tab.active[data-tab="backlog"]{background:#a78bfa;color:var(--bg);box-shadow:0 0 12px rgba(167,139,250,0.45);}
+  .tab.active[data-tab="wishlist"]{background:#94a3b8;color:var(--bg);box-shadow:0 0 12px rgba(148,163,184,0.45);}
+  .tab.active[data-tab="dropped"]{background:var(--red);color:var(--bg);box-shadow:0 0 12px rgba(239,68,68,0.45);}
+  .tab.active[data-tab="playlist"]{background:#fbbf24;color:var(--bg);box-shadow:0 0 12px rgba(251,191,36,0.5);}
+
+  /* PLAYLIST SECTION */
+  .playlist-section{margin-bottom:24px;}
+  .playlist-header{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+  .playlist-title{font-family:'Orbitron',sans-serif;font-size:16px;letter-spacing:2px;color:#fbbf24;text-transform:uppercase;flex:1;min-width:160px;}
+  .playlist-actions{display:flex;gap:8px;flex-wrap:wrap;}
+  .playlist-btn{background:transparent;border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 14px;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s;}
+  .playlist-btn:hover{border-color:#fbbf24;color:#fbbf24;}
+  .playlist-btn.primary{background:#fbbf24;border-color:#fbbf24;color:var(--bg);}
+  .playlist-btn.primary:hover{background:#f59e0b;border-color:#f59e0b;color:var(--bg);}
+  .playlist-btn.danger:hover{border-color:var(--red);color:var(--red);}
+
+  .playlist-grid{display:flex;flex-direction:column;gap:10px;}
+  .pl-row{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;transition:border-color 0.2s;}
+  .pl-row:hover{border-color:rgba(251,191,36,0.4);}
+  .pl-row-empty{border:2px dashed var(--border);cursor:pointer;color:var(--muted);padding:18px 12px;}
+  .pl-row-empty:hover{border-color:#fbbf24;color:#fbbf24;}
+  .pl-row-pos{width:30px;height:30px;border-radius:50%;background:#fbbf24;color:var(--bg);font-family:'Orbitron',sans-serif;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .pl-row-pos-empty{background:transparent;color:#fbbf24;border:2px solid var(--border);}
+  .pl-row-empty-text{flex:1;font-size:14px;font-weight:600;}
+  .pl-row-cover-wrap{flex-shrink:0;cursor:pointer;}
+  .pl-row-cover{width:44px;height:60px;border-radius:6px;object-fit:cover;display:block;border:1px solid var(--border);}
+  .pl-row-cover-ph{background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:20px;}
+  .pl-row-body{flex:1;min-width:0;cursor:pointer;}
+  .pl-row-title{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);}
+  .pl-row-meta{font-size:12px;color:var(--muted);margin-top:3px;display:flex;align-items:center;gap:5px;}
+  .pl-status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+  .pl-row-controls{display:flex;gap:4px;flex-shrink:0;}
+  .pl-arrow,.pl-remove{width:34px;height:34px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;transition:all 0.15s;}
+  .pl-arrow:hover:not(:disabled){border-color:#fbbf24;color:#fbbf24;}
+  .pl-arrow:disabled{opacity:0.3;cursor:not-allowed;}
+  .pl-remove:hover{border-color:var(--red);color:var(--red);}
+
+  .playlist-empty{text-align:center;padding:32px 20px;color:var(--muted);background:var(--surface);border:1px dashed var(--border);border-radius:10px;}
+  .playlist-empty .emoji{font-size:36px;margin-bottom:8px;}
+
+  /* Playlist target marker on regular tiles */
+  .game-tile-playlist{position:absolute;top:5px;left:6px;font-size:15px;line-height:1;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.9));pointer-events:none;}
+  /* If both favorite and playlist: stack vertically */
+  .game-tile-playlist + .game-tile-fav, .game-card:has(.game-tile-playlist) .game-tile-fav{top:24px;}
+
+  /* Challenge journal */
+
+  /* TOOLBAR — kept for legacy, filter-bar replaces it */
+  .toolbar{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center;}
+  .search-wrap{position:relative;}
+  .results-count{font-size:13px;color:var(--muted);margin:0 0 14px 2px;letter-spacing:0.3px;min-height:16px;}
+  .results-count b{color:var(--text);font-weight:600;}
+  .search-wrap input{width:100%;}
+  input[type="text"],input[type="number"],select{background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 14px;font-family:'Rajdhani',sans-serif;font-size:15px;width:100%;outline:none;transition:border-color 0.2s,box-shadow 0.2s;}
+  input[type="text"]:focus,input[type="number"]:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,212,255,0.1);}
+  select{cursor:pointer;min-width:140px;}
+  select option,select optgroup{background:var(--surface2);}
+  input[type="number"]::-webkit-inner-spin-button{opacity:1;}
+  .btn{padding:10px 20px;border-radius:8px;border:none;font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.2s;letter-spacing:0.5px;white-space:nowrap;}
+  .btn-primary{background:var(--accent);color:var(--bg);box-shadow:0 0 12px rgba(0,212,255,0.25);}
+  .btn-primary:hover{box-shadow:0 0 20px rgba(0,212,255,0.5);transform:translateY(-1px);}
+  .btn-gold{background:var(--accent3);color:var(--bg);box-shadow:0 0 12px rgba(245,158,11,0.3);}
+  .btn-gold:hover{box-shadow:0 0 20px rgba(245,158,11,0.5);transform:translateY(-1px);}
+  .btn-ghost{background:var(--surface);color:var(--text);border:1px solid var(--border);}
+  .btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+
+  /* GAME GRID (Kacheldesign) */
+  .game-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;}
+  @media(max-width:480px){.game-list{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;}}
+
+  .game-card{
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;
+    overflow:hidden;cursor:pointer;transition:transform 0.18s,border-color 0.18s,box-shadow 0.18s;
+    animation:fadeIn 0.3s ease;position:relative;aspect-ratio:2/3;display:flex;flex-direction:column;
+  }
+  @keyframes fadeIn{from{opacity:0;transform:scale(0.96)}to{opacity:1;transform:scale(1)}}
+  .game-card:hover{transform:translateY(-4px) scale(1.02);border-color:var(--accent);box-shadow:0 8px 28px rgba(0,212,255,0.18);}
+
+  /* Cover fills the tile */
+  .game-tile-cover{width:100%;flex:1;object-fit:cover;display:block;min-height:0;}
+  .game-tile-cover-ph{width:100%;flex:1;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:36px;min-height:0;}
+
+  /* Title bar at bottom */
+  .game-tile-footer{padding:8px 10px 7px;background:linear-gradient(0deg,rgba(8,11,20,0.98) 0%,rgba(8,11,20,0.85) 100%);flex-shrink:0;}
+  .game-tile-title{font-size:14px;font-weight:700;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:var(--text);}
+
+  /* Status dot in top-right corner */
+  .game-tile-status{position:absolute;top:7px;right:7px;width:11px;height:11px;border-radius:50%;border:2px solid rgba(8,11,20,0.7);flex-shrink:0;}
+  .game-tile-fav{position:absolute;top:5px;left:6px;font-size:15px;line-height:1;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.9));pointer-events:none;}
+  .sdot-playing{background:#fb923c;}
+  .sdot-beaten{background:#10b981;}
+  .sdot-backlog{background:#a78bfa;}
+  .sdot-wishlist{background:#94a3b8;}
+  .sdot-dropped{background:#ef4444;}
+
+  /* Old list styles kept for tags/badges used in detail modal */
+  .tag{font-size:11px;padding:2px 7px;border-radius:4px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;white-space:nowrap;}
+  .tag-platform{background:rgba(0,212,255,0.1);color:var(--accent);border:1px solid rgba(0,212,255,0.2);}
+  .tag-genre{background:rgba(124,58,237,0.1);color:#a78bfa;border:1px solid rgba(124,58,237,0.2);}
+  .tag-rating{background:rgba(245,158,11,0.1);color:var(--accent3);border:1px solid rgba(245,158,11,0.2);}
+  .tag-plays{background:rgba(16,185,129,0.1);color:var(--green);border:1px solid rgba(16,185,129,0.2);}
+  .tag-year{background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid rgba(100,116,139,0.3);}
+  .score-display{display:inline-flex;align-items:center;gap:5px;}
+  .score-bar{width:48px;height:4px;background:var(--border);border-radius:3px;overflow:hidden;}
+  .score-fill{height:100%;border-radius:3px;}
+  .status-badge{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;flex-shrink:0;}
+  .status-owned{background:rgba(0,212,255,0.12);color:var(--accent);border:1px solid rgba(0,212,255,0.3);}
+  .status-playing{background:rgba(249,115,22,0.15);color:#fb923c;border:1px solid rgba(249,115,22,0.4);}
+  .status-beaten{background:rgba(16,185,129,0.12);color:var(--green);border:1px solid rgba(16,185,129,0.3);}
+  .status-backlog{background:rgba(124,58,237,0.12);color:#a78bfa;border:1px solid rgba(124,58,237,0.3);}
+  .status-wishlist{background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid rgba(100,116,139,0.3);}
+  .status-dropped{background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.3);}
+  .chip.active.status-playing-chip{background:#fb923c;border-color:#fb923c;color:var(--bg);box-shadow:0 0 10px rgba(251,146,60,0.4);}
+  .chip.active.status-beaten-chip{background:var(--green);border-color:var(--green);color:var(--bg);box-shadow:0 0 10px rgba(16,185,129,0.4);}
+  .chip.active.status-backlog-chip{background:#a78bfa;border-color:#a78bfa;color:var(--bg);box-shadow:0 0 10px rgba(167,139,250,0.4);}
+  .chip.active.status-wishlist-chip{background:#94a3b8;border-color:#94a3b8;color:var(--bg);box-shadow:0 0 10px rgba(148,163,184,0.4);}
+  .chip.active.status-dropped-chip{background:var(--red);border-color:var(--red);color:var(--bg);box-shadow:0 0 10px rgba(239,68,68,0.4);}
+  .icon-btn{width:32px;height:32px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all 0.15s;}
+  .icon-btn:hover{color:var(--text);border-color:var(--accent);}
+  .icon-btn.danger:hover{color:var(--red);border-color:var(--red);}
+
+  /* TAB COUNTS */
+  .tab-count{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:9px;font-size:11px;font-weight:700;background:rgba(0,0,0,0.2);color:inherit;margin-left:5px;opacity:0.8;}
+  .tab.active .tab-count{background:rgba(0,0,0,0.25);opacity:1;}
+
+  /* FILTER BAR */
+  .filter-bar{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
+  .filter-bar .search-wrap{flex:1;min-width:160px;}
+  .filter-bar .search-wrap input{width:100%;}
+  .filter-bar-divider{width:1px;height:22px;background:var(--border);flex-shrink:0;}
+  .filter-bar-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.15s;white-space:nowrap;letter-spacing:0.3px;}
+  .filter-bar-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .filter-bar-btn.open{border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,0.06);}
+  .btn-primary-bar{background:var(--accent);color:var(--bg);border-color:var(--accent);}
+  .btn-primary-bar:hover{box-shadow:0 0 16px rgba(0,212,255,0.4);transform:translateY(-1px);color:var(--bg);}
+  .filter-active-badge{background:var(--accent);color:var(--bg);border-radius:10px;padding:1px 7px;font-size:11px;font-weight:700;margin-left:2px;}
+
+  /* FILTER PANEL */
+  .filter-panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px;animation:fadeIn 0.2s ease;}
+  .filter-panel-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;}
+  .fp-group label{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:0.8px;text-transform:uppercase;display:block;margin-bottom:5px;}
+  .fp-group select{width:100%;}
+  .detail-cover{width:100%;max-height:260px;object-fit:cover;border-radius:10px;margin-bottom:18px;display:block;}
+  .detail-cover-ph{width:100%;height:140px;background:var(--surface2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:52px;margin-bottom:18px;}
+  .detail-title{font-family:'Orbitron',sans-serif;font-size:17px;font-weight:700;margin-bottom:10px;line-height:1.3;}
+  .detail-meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+  .detail-row{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:14px;color:var(--text);}
+  .detail-row-label{color:var(--muted);font-size:12px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;min-width:80px;padding-top:1px;}
+  .detail-actions{display:flex;gap:10px;margin-top:18px;}
+  .empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
+  .empty-state .emoji{font-size:48px;margin-bottom:12px;}
+
+  /* ADD / EDIT FORMS */
+  .add-form{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:24px;display:none;animation:fadeIn 0.3s ease;}
+  .add-form.open{display:block;}
+  /* form-actions only visible when parent form is open */
+  #addForm .form-actions{display:none;}
+  #addForm.open .form-actions{display:flex;}
+  .form-title{font-family:'Orbitron',sans-serif;font-size:13px;color:var(--accent);letter-spacing:2px;margin-bottom:16px;text-transform:uppercase;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media(max-width:560px){.form-grid{grid-template-columns:1fr;}}
+  .form-group{display:flex;flex-direction:column;gap:6px;}
+  .form-group label{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;}
+  .form-group.full{grid-column:1/-1;}
+  .fav-toggle{display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:11px 14px;font-size:14px;font-weight:500;color:var(--text);text-transform:none;letter-spacing:0;transition:border-color 0.2s;}
+  .fav-toggle:hover{border-color:var(--accent3);}
+  .fav-toggle input{width:16px;height:16px;accent-color:var(--accent3);cursor:pointer;flex-shrink:0;}
+  .fav-toggle span{user-select:none;}
+  .form-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;}
+  .form-cover-row{display:flex;gap:14px;align-items:flex-start;margin:12px 0;}
+  .form-cover-img{width:54px;height:72px;border-radius:7px;object-fit:cover;border:2px solid var(--border);flex-shrink:0;display:none;cursor:pointer;transition:border-color 0.2s,transform 0.15s;}
+  .form-cover-img.visible{display:block;}
+  .form-cover-img.visible:hover{border-color:var(--accent);transform:scale(1.05);}
+  .form-cover-hint{font-size:11px;color:var(--muted);margin-top:4px;display:none;}
+  .form-cover-img.visible + * .form-cover-hint{display:block;}
+
+  /* Cover picker grid */
+  .cover-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;max-height:420px;overflow-y:auto;padding:4px;}
+  .cover-option{border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:border-color 0.15s,transform 0.15s;aspect-ratio:3/4;background:var(--surface2);}
+  .cover-option:hover{border-color:var(--accent);transform:scale(1.03);}
+  .cover-option.selected{border-color:var(--accent);box-shadow:0 0 12px rgba(0,212,255,0.4);}
+  .cover-option img{width:100%;height:100%;object-fit:cover;display:block;}
+  .cover-loading{text-align:center;padding:40px;color:var(--muted);font-size:14px;}
+
+  /* PLATFORM MULTI-PICKER */
+  .plat-picker{display:flex;flex-wrap:wrap;gap:6px;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;min-height:44px;transition:border-color 0.2s;}
+  .plat-picker:focus-within{border-color:var(--accent);}
+  .plat-pill{display:inline-flex;align-items:center;gap:4px;background:rgba(0,212,255,0.12);color:var(--accent);border:1px solid rgba(0,212,255,0.3);border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;cursor:default;}
+  .plat-pill button{background:none;border:none;color:var(--accent);cursor:pointer;font-size:14px;line-height:1;padding:0 0 0 2px;opacity:0.7;}
+  .plat-pill button:hover{opacity:1;}
+  .plat-add-wrap{position:relative;flex:1;min-width:120px;}
+  .plat-input{background:transparent;border:none;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:14px;padding:2px 4px;width:100%;outline:none;}
+  .plat-dropdown{position:absolute;top:calc(100% + 4px);left:0;min-width:200px;background:var(--surface2);border:1px solid var(--accent);border-radius:8px;z-index:400;max-height:220px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.5);}
+  .plat-dropdown.hidden{display:none;}
+  .plat-opt{padding:8px 14px;cursor:pointer;font-size:14px;font-weight:500;transition:background 0.12s;}
+  .plat-opt:hover{background:rgba(0,212,255,0.1);color:var(--accent);}
+  .plat-opt-group{padding:6px 14px 2px;font-size:11px;color:var(--muted);font-weight:700;letter-spacing:1px;text-transform:uppercase;border-top:1px solid var(--border);}
+  .plat-opt-group:first-child{border-top:none;}
+
+  /* RAWG AUTOCOMPLETE */
+  .rawg-wrap{position:relative;}
+  .rawg-results{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--surface2);border:1px solid var(--accent);border-radius:10px;z-index:300;max-height:300px;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.6),0 0 20px rgba(0,212,255,0.1);}
+  .rawg-results.hidden{display:none;}
+  .rawg-item{display:flex;align-items:center;gap:12px;padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;}
+  .rawg-item-owned{opacity:0.6;background:rgba(16,185,129,0.06);}
+  .rawg-item-owned:hover{opacity:0.85;}
+  .rawg-item:last-child{border-bottom:none;}
+  .rawg-item:hover{background:rgba(0,212,255,0.07);}
+  .rawg-thumb{width:34px;height:46px;border-radius:5px;object-fit:cover;flex-shrink:0;background:var(--border);}
+  .rawg-thumb-ph{width:34px;height:46px;border-radius:5px;flex-shrink:0;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;}
+  .rawg-info{flex:1;min-width:0;}
+  .rawg-name{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .rawg-meta{font-size:12px;color:var(--muted);margin-top:2px;}
+  .rawg-msg{padding:14px;text-align:center;color:var(--muted);font-size:14px;}
+
+  /* MODALS */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeOv 0.2s ease;}
+  @keyframes fadeOv{from{opacity:0}to{opacity:1}}
+  .modal{background:var(--surface);border:1px solid var(--accent);border-radius:16px;padding:32px;max-width:520px;width:100%;box-shadow:0 0 60px rgba(0,212,255,0.2);animation:mpop 0.3s cubic-bezier(0.34,1.56,0.64,1);position:relative;max-height:90vh;overflow-y:auto;}
+  @keyframes mpop{from{opacity:0;transform:scale(0.85) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+  .modal-title{font-family:'Orbitron',sans-serif;font-size:13px;color:var(--accent);letter-spacing:2px;margin-bottom:20px;text-transform:uppercase;}
+  .modal-close{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all 0.15s;}
+  .modal-close:hover{color:var(--text);border-color:var(--text);}
+
+  /* RANDOM MODAL */
+  .random-display{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:24px;text-align:center;margin-bottom:20px;}
+  .random-cover{width:80px;height:107px;border-radius:8px;object-fit:cover;margin:0 auto 12px;display:block;border:1px solid var(--border);}
+  .random-ph{font-size:48px;margin-bottom:12px;}
+  .random-name{font-family:'Orbitron',sans-serif;font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px;}
+
+  /* FILTER CHIPS (random modal) */
+  .filter-section{margin-bottom:20px;}
+  .filter-label{font-size:12px;color:var(--muted);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;}
+  .chip-group{display:flex;flex-wrap:wrap;gap:7px;}
+  .chip{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;letter-spacing:0.3px;}
+  .chip:hover{border-color:var(--accent);color:var(--accent);}
+  .chip.active{background:var(--accent);color:var(--bg);border-color:var(--accent);box-shadow:0 0 10px rgba(0,212,255,0.3);}
+  .no-results-hint{text-align:center;padding:12px;color:var(--muted);font-size:13px;}
+
+  .hidden{display:none !important;}
+  ::-webkit-scrollbar{width:6px;}
+  ::-webkit-scrollbar-track{background:var(--bg);}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="header-inner">
+      <div class="logo">NEUZCORE<span>'S</span></div>
+      <div style="font-family:'Orbitron',sans-serif;font-size:13px;color:var(--muted);letter-spacing:3px;margin-top:4px;">GAMING BACKLOG</div>
+      <div class="hdr-btns">
+        <span id="cloudStatus" title="Cloud-Einstellungen öffnen" style="font-size:13px;font-weight:600;letter-spacing:0.5px;color:var(--muted);padding-right:4px;cursor:pointer;user-select:none;">☁ Cloud</span>
+        <button class="hdr-btn" id="exportBtn">⬇ Backup exportieren</button>
+        <label class="hdr-btn" for="importFile">⬆ Backup importieren</label>
+        <input type="file" id="importFile" accept=".json" style="display:none;">
+        <label class="hdr-btn" for="csvImportFile" style="background:rgba(124,58,237,0.15);border-color:rgba(124,58,237,0.4);color:#a78bfa;">📋 CSV importieren</label>
+        <input type="file" id="csvImportFile" accept=".csv,.txt" style="display:none;">
+        <div style="color:var(--muted);font-size:12px;letter-spacing:1px;">powered by <span class="rawg-badge">RAWG</span> <span style="opacity:0.4;font-size:11px;margin-left:6px;">v1.3.3</span></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CLOUD SETUP MODAL -->
+  <div class="modal-overlay hidden" id="cloudModal">
+    <div class="modal" style="max-width:480px;">
+      <button class="modal-close" id="closeCloud">✕</button>
+      <div class="modal-title">☁ Cloud-Synchronisation</div>
+      <p style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:18px;">
+        Gib deine JSONBin-Zugangsdaten ein, um deine Spieleliste zwischen
+        PC und Handy zu synchronisieren. Die Daten werden <strong>nur auf
+        diesem Gerät</strong> gespeichert und sind nicht im App-Code sichtbar.
+      </p>
+      <div class="form-group" style="margin-bottom:12px;">
+        <label>Bin ID</label>
+        <input type="text" id="cloudBinId" placeholder="z.B. 6a087414250b1311c35c408b" autocomplete="off">
+      </div>
+      <div class="form-group" style="margin-bottom:8px;">
+        <label>Master Key</label>
+        <input type="password" id="cloudKey" placeholder="$2a$10$…" autocomplete="off">
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:18px;">
+        Beide Werte findest du in deinem JSONBin-Account unter „API Keys" und „Bins".
+      </p>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-primary" id="saveCloudCreds" style="flex:1;">Verbinden</button>
+        <button class="btn btn-ghost" id="disconnectCloud" style="flex:1;">Trennen</button>
+      </div>
+      <div id="cloudModalMsg" style="margin-top:14px;font-size:13px;text-align:center;"></div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="all">Alle <span class="tab-count" id="tc-all">0</span></button>
+    <button class="tab" data-tab="playing">Aktuell <span class="tab-count" id="tc-playing">0</span></button>
+    <button class="tab" data-tab="backlog">Backlog <span class="tab-count" id="tc-backlog">0</span></button>
+    <button class="tab" data-tab="beaten">Durchgespielt <span class="tab-count" id="tc-beaten">0</span></button>
+    <button class="tab" data-tab="wishlist">Wunschliste <span class="tab-count" id="tc-wishlist">0</span></button>
+    <button class="tab" data-tab="dropped">Abgebrochen <span class="tab-count" id="tc-dropped">0</span></button>
+    <button class="tab" data-tab="playlist">🎯 Reihenfolge <span class="tab-count" id="tc-playlist">0</span></button>
+  </div>
+
+  <div class="filter-bar">
+    <div class="search-wrap" style="flex:1;">
+      <input type="text" id="searchInput" placeholder="Bibliothek durchsuchen…">
+    </div>
+    <div class="filter-bar-divider"></div>
+    <button class="filter-bar-btn" id="filterToggleBtn" onclick="toggleFilterPanel()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+      Filter
+      <span class="filter-active-badge hidden" id="filterBadge">0</span>
+    </button>
+    <button class="filter-bar-btn" id="randomBtn">🎲 Zufall</button>
+    <button class="filter-bar-btn btn-primary-bar" id="addBtn">＋ Hinzufügen</button>
+  </div>
+
+  <div class="filter-panel hidden" id="filterPanel">
+    <div class="filter-panel-grid">
+      <div class="fp-group">        <label>Plattform</label>
+        <select id="platformFilter">
+          <option value="">Alle Plattformen</option>
+        </select>
+      </div>
+      <div class="fp-group">
+        <label>Genre</label>
+        <select id="genreFilter">
+          <option value="">Alle Genres</option>
+        </select>
+      </div>
+      <div class="fp-group">
+        <label>Erscheinungsjahr</label>
+        <select id="releaseYearFilter"><option value="">Alle Jahre</option></select>
+      </div>
+      <div class="fp-group">
+        <label>Durchgespielt in</label>
+        <select id="yearFilter"><option value="">Alle Jahre</option></select>
+      </div>
+      <div class="fp-group">
+        <label>Sortierung</label>
+        <select id="sortSelect">
+          <option value="az" selected>A → Z</option>
+          <option value="za">Z → A</option>
+          <option value="ratingDesc">Bewertung ↓ (hoch → niedrig)</option>
+          <option value="ratingAsc">Bewertung ↑ (niedrig → hoch)</option>
+          <option value="releaseDesc">Erscheinungsjahr ↓ (neu → alt)</option>
+          <option value="releaseAsc">Erscheinungsjahr ↑ (alt → neu)</option>
+          <option value="addedDesc">Zuletzt hinzugefügt</option>
+          <option value="addedAsc">Zuerst hinzugefügt</option>
+          <option value="playsDesc">Spielzahl ↓ (oft → selten)</option>
+        </select>
+      </div>
+      <div class="fp-group" style="display:flex;align-items:flex-end;">
+        <button class="filter-bar-btn" style="width:100%;justify-content:center;" onclick="resetFilters()">↺ Filter zurücksetzen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD FORM -->
+  <div class="add-form" id="addForm">
+    <div class="form-title">⬡ Neues Spiel hinzufügen</div>
+    <div class="form-group" style="margin-bottom:12px;">
+      <label>Spiel in RAWG-Datenbank suchen <span class="rawg-badge">LIVE</span></label>
+      <div class="rawg-wrap">
+        <input type="text" id="rawgSearch" placeholder="Titel tippen – Cover, Genre & Plattform werden automatisch geladen…" autocomplete="off">
+        <div class="rawg-results hidden" id="rawgResults"></div>
+      </div>
+    </div>
+    <div class="form-cover-row">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;">
+        <img class="form-cover-img" id="coverPreview" src="" alt="Cover" title="Klicken um Cover zu wechseln" onclick="openCoverPicker('new')">
+        <span id="coverPickerHint" style="font-size:10px;color:var(--accent);display:none;cursor:pointer;letter-spacing:0.5px;" onclick="openCoverPicker('new')">🖼 wechseln</span>
+      </div>
+      <div style="flex:1;">
+        <div class="form-group">
+          <label>Spieltitel *</label>
+          <input type="text" id="newTitle" placeholder="Wird aus RAWG übernommen oder manuell eingeben">
+        </div>
+      </div>
+    </div>
+    <input type="hidden" id="newCoverUrl">
+    <div class="form-grid" style="margin-top:12px;">
+      <div class="form-group">
+        <label>Status *</label>
+        <select id="newStatus">
+          <option value="playing">Spiele ich aktuell</option>
+          <option value="beaten">Durchgespielt</option>
+          <option value="backlog" selected>Backlog</option>
+          <option value="wishlist">Wunschliste</option>
+          <option value="dropped">Abgebrochen</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Genre</label>
+        <select id="newGenre">
+          <option value="">– auswählen –</option>
+          <option>Action</option><option>Action-Adventure</option><option>RPG</option><option>Adventure</option><option>Soulslike</option><option>Metroidvania</option><option>Strategie</option><option>Shooter</option><option>Platformer</option><option>Horror</option><option>Simulation</option><option>Sport</option><option>Rennspiel</option><option>Puzzle</option><option>Sonstige</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label>Plattformen (Mehrfachauswahl möglich)</label>
+        <div class="plat-picker" id="newPlatPicker">
+          <div class="plat-add-wrap">
+            <input class="plat-input" id="newPlatInput" placeholder="Plattform tippen oder auswählen…" autocomplete="off">
+            <div class="plat-dropdown hidden" id="newPlatDrop"></div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Bewertung</label>
+        <select id="newRating">
+          <option value="">–</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Erscheinungsjahr</label>
+        <select id="newReleaseYear">
+          <option value="">– kein Jahr –</option>
+          <option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option><option value="2022">2022</option><option value="2021">2021</option><option value="2020">2020</option><option value="2019">2019</option><option value="2018">2018</option><option value="2017">2017</option><option value="2016">2016</option><option value="2015">2015</option><option value="2014">2014</option><option value="2013">2013</option><option value="2012">2012</option><option value="2011">2011</option><option value="2010">2010</option><option value="2009">2009</option><option value="2008">2008</option><option value="2007">2007</option><option value="2006">2006</option><option value="2005">2005</option><option value="2004">2004</option><option value="2003">2003</option><option value="2002">2002</option><option value="2001">2001</option><option value="2000">2000</option><option value="1999">1999</option><option value="1998">1998</option><option value="1997">1997</option><option value="1996">1996</option><option value="1995">1995</option><option value="1994">1994</option><option value="1993">1993</option><option value="1992">1992</option><option value="1991">1991</option><option value="1990">1990</option><option value="1989">1989</option><option value="1988">1988</option><option value="1987">1987</option><option value="1986">1986</option><option value="1985">1985</option><option value="1984">1984</option><option value="1983">1983</option><option value="1982">1982</option><option value="1981">1981</option><option value="1980">1980</option><option value="1979">1979</option><option value="1978">1978</option><option value="1977">1977</option><option value="1976">1976</option><option value="1975">1975</option><option value="1974">1974</option><option value="1973">1973</option><option value="1972">1972</option><option value="1971">1971</option><option value="1970">1970</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Durchspieldurchläufe</label>
+        <input type="number" id="newPlays" min="0" step="1" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label>Lieblingsspiel</label>
+        <label class="fav-toggle"><input type="checkbox" id="newFavorite"> <span>👑 Als Lieblingsspiel markieren</span></label>
+      </div>
+      <div class="form-group full">
+        <label>Durchgespielt in (Jahr, Mehrfachauswahl möglich)</label>
+        <div class="plat-picker" id="newYearPicker">
+          <div class="plat-add-wrap">
+            <input class="plat-input" id="newYearInput" placeholder="Jahr eingeben, z.B. 2024…" autocomplete="off" type="number" min="1970" max="2099">
+            <div class="plat-dropdown hidden" id="newYearDrop"></div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group full">
+        <label>Notizen</label>
+        <input type="text" id="newNotes" placeholder="Eigene Notizen…">
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" id="cancelAdd">Abbrechen</button>
+      <button class="btn btn-primary" id="saveGame">Speichern</button>
+    </div>
+  </div>
+
+  <div class="playlist-section" id="playlistSection" style="display:none;">
+    <div class="playlist-header">
+      <div class="playlist-title">🎯 Reihenfolge</div>
+      <div class="playlist-actions">
+        <button class="playlist-btn primary" id="playlistAddBtn">＋ Spiel</button>
+        <button class="playlist-btn" id="playlistRandomBtn">🎲 Zufall</button>
+        <button class="playlist-btn danger" id="playlistClearBtn">🗑 Leeren</button>
+      </div>
+    </div>
+    <p style="color:var(--muted);font-size:12px;margin:-6px 0 14px 0;">Die nächsten 5 Spiele in deiner Wunschreihenfolge.</p>
+    <div class="playlist-grid" id="playlistGrid"></div>
+  </div>
+
+  <div class="results-count" id="resultsCount"></div>
+  <div class="game-list" id="gameList"></div>
+  <div class="empty-state hidden" id="emptyState"><div class="emoji">🕹️</div><p>Keine Spiele gefunden.</p></div>
+</div>
+
+<!-- COVER PICKER MODAL -->
+<div class="modal-overlay hidden" id="coverPickerModal">
+  <div class="modal" style="max-width:560px;">
+    <button class="modal-close" onclick="document.getElementById('coverPickerModal').classList.add('hidden')">✕</button>
+    <div class="modal-title">🖼 Cover auswählen</div>
+    <div class="form-group" style="margin-bottom:16px;">
+      <label>Eigene Bild-URL</label>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="customCoverUrl" placeholder="https://… (Link zu einem Bild)" autocomplete="off" style="flex:1;">
+        <button class="btn btn-primary" style="white-space:nowrap;" onclick="applyCustomCover()">Übernehmen</button>
+      </div>
+      <span style="font-size:11px;color:var(--muted);margin-top:4px;">Tipp: Bild im Web per Rechtsklick → „Bildadresse kopieren"</span>
+    </div>
+    <div id="coverPickerContent" class="cover-loading">Lade Bilder…</div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button class="btn btn-ghost" style="flex:1;" onclick="document.getElementById('coverPickerModal').classList.add('hidden')">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<!-- RANDOM FILTER + RESULT MODAL -->
+<div class="modal-overlay hidden" id="randomModal">
+  <div class="modal" style="max-width:480px;">
+    <button class="modal-close" id="closeRandom">✕</button>
+    <div class="modal-title">🎲 Zufallsspiel</div>
+
+    <!-- Filters -->
+    <div id="randomFilters">
+      <div class="filter-section">
+        <div class="filter-label">Status filtern</div>
+        <div class="chip-group" id="statusChips">
+          <button class="chip active status-playing-chip" data-val="playing">Aktuell</button>
+          <button class="chip active status-beaten-chip" data-val="beaten">Durchgespielt</button>
+          <button class="chip active status-backlog-chip" data-val="backlog">Backlog</button>
+          <button class="chip active status-wishlist-chip" data-val="wishlist">Wunschliste</button>
+          <button class="chip active status-dropped-chip" data-val="dropped">Abgebrochen</button>
+        </div>
+      </div>
+      <div class="filter-section">
+        <div class="filter-label">Plattform filtern</div>
+        <div class="chip-group" id="platformChips">
+          <!-- filled dynamically -->
+        </div>
+      </div>
+      <button class="btn btn-gold" id="doRandomBtn" style="width:100%;margin-bottom:16px;">🎲 Würfeln!</button>
+    </div>
+
+    <!-- Result -->
+    <div id="randomResult" class="hidden">
+      <div class="random-display">
+        <div id="randomCoverWrap"></div>
+        <div class="random-name" id="randomName">–</div>
+        <div id="randomMeta" style="margin-top:8px;"></div>
+      </div>
+      <div id="randomActions" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+        <button class="btn btn-primary" id="randomOpenDetail" style="flex:1;min-width:120px;">👁 Details</button>
+        <button class="btn btn-ghost" id="randomOpenEdit" style="flex:1;min-width:120px;">✏️ Bearbeiten</button>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-gold" id="rerollBtn" style="flex:1;">🎲 Nochmal würfeln</button>
+        <button class="btn btn-ghost" id="backToFilters" style="flex:1;">⚙ Filter ändern</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay hidden" id="editModal">
+  <div class="modal">
+    <button class="modal-close" id="closeEdit">✕</button>
+    <div class="modal-title">✏️ Spiel bearbeiten</div>
+    <input type="hidden" id="editId">
+    <input type="hidden" id="editCoverUrl">
+    <div style="display:flex;gap:14px;margin-bottom:14px;align-items:flex-start;">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;">
+        <img id="editCoverImg" src="" alt="" title="Klicken um Cover zu wechseln" style="width:54px;height:72px;border-radius:7px;object-fit:cover;border:1px solid var(--border);display:none;cursor:pointer;" onclick="openCoverPicker('edit')">
+        <span style="font-size:10px;color:var(--accent);cursor:pointer;letter-spacing:0.5px;white-space:nowrap;" onclick="openCoverPicker('edit')">🖼 Cover ändern</span>
+      </div>
+      <div style="flex:1;"><div class="form-group"><label>Spieltitel</label><input type="text" id="editTitle"></div></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Status</label>
+        <select id="editStatus">
+          <option value="playing">Spiele ich aktuell</option>
+          <option value="beaten">Durchgespielt</option>
+          <option value="backlog">Backlog</option>
+          <option value="wishlist">Wunschliste</option>
+          <option value="dropped">Abgebrochen</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Genre</label>
+        <select id="editGenre">
+          <option value="">– auswählen –</option>
+          <option>Action</option><option>Action-Adventure</option><option>RPG</option><option>Adventure</option><option>Soulslike</option><option>Metroidvania</option><option>Strategie</option><option>Shooter</option><option>Platformer</option><option>Horror</option><option>Simulation</option><option>Sport</option><option>Rennspiel</option><option>Puzzle</option><option>Sonstige</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label>Plattformen (Mehrfachauswahl möglich)</label>
+        <div class="plat-picker" id="editPlatPicker">
+          <div class="plat-add-wrap">
+            <input class="plat-input" id="editPlatInput" placeholder="Plattform tippen oder auswählen…" autocomplete="off">
+            <div class="plat-dropdown hidden" id="editPlatDrop"></div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Bewertung</label>
+        <select id="editRating">
+          <option value="">–</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Erscheinungsjahr</label>
+        <select id="editReleaseYear">
+          <option value="">– kein Jahr –</option>
+          <option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option><option value="2022">2022</option><option value="2021">2021</option><option value="2020">2020</option><option value="2019">2019</option><option value="2018">2018</option><option value="2017">2017</option><option value="2016">2016</option><option value="2015">2015</option><option value="2014">2014</option><option value="2013">2013</option><option value="2012">2012</option><option value="2011">2011</option><option value="2010">2010</option><option value="2009">2009</option><option value="2008">2008</option><option value="2007">2007</option><option value="2006">2006</option><option value="2005">2005</option><option value="2004">2004</option><option value="2003">2003</option><option value="2002">2002</option><option value="2001">2001</option><option value="2000">2000</option><option value="1999">1999</option><option value="1998">1998</option><option value="1997">1997</option><option value="1996">1996</option><option value="1995">1995</option><option value="1994">1994</option><option value="1993">1993</option><option value="1992">1992</option><option value="1991">1991</option><option value="1990">1990</option><option value="1989">1989</option><option value="1988">1988</option><option value="1987">1987</option><option value="1986">1986</option><option value="1985">1985</option><option value="1984">1984</option><option value="1983">1983</option><option value="1982">1982</option><option value="1981">1981</option><option value="1980">1980</option><option value="1979">1979</option><option value="1978">1978</option><option value="1977">1977</option><option value="1976">1976</option><option value="1975">1975</option><option value="1974">1974</option><option value="1973">1973</option><option value="1972">1972</option><option value="1971">1971</option><option value="1970">1970</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Durchspieldurchläufe</label>
+        <input type="number" id="editPlays" min="0" step="1" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label>Lieblingsspiel</label>
+        <label class="fav-toggle"><input type="checkbox" id="editFavorite"> <span>👑 Als Lieblingsspiel markieren</span></label>
+      </div>
+      <div class="form-group full">
+        <label>Durchgespielt in (Jahr, Mehrfachauswahl möglich)</label>
+        <div class="plat-picker" id="editYearPicker">
+          <div class="plat-add-wrap">
+            <input class="plat-input" id="editYearInput" placeholder="Jahr eingeben, z.B. 2024…" autocomplete="off" type="number" min="1970" max="2099">
+            <div class="plat-dropdown hidden" id="editYearDrop"></div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group full">
+        <label>Notizen</label>
+        <input type="text" id="editNotes">
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" id="cancelEdit">Abbrechen</button>
+      <button class="btn btn-primary" id="saveEdit">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay hidden" id="detailModal">
+  <div class="modal" style="max-width:460px;">
+    <button class="modal-close" id="closeDetail">✕</button>
+    <div id="detailCoverWrap"></div>
+    <div class="detail-title" id="detailTitle"></div>
+    <div class="detail-meta" id="detailMeta"></div>
+    <div id="detailRows"></div>
+    <div class="detail-actions">
+      <button class="btn btn-ghost" id="detailPlaylistBtn" style="flex:1;border-color:#fbbf24;color:#fbbf24;">🎯 Liste</button>
+      <button class="btn btn-primary" id="detailEditBtn" style="flex:1;">✏️ Bearbeiten</button>
+      <button class="btn btn-ghost" id="detailDeleteBtn" style="flex:1;color:var(--red);border-color:var(--red);">🗑 Löschen</button>
+    </div>
+  </div>
+</div>
+
+<!-- PLAYLIST: PICK GAME -->
+<div class="modal-overlay hidden" id="playlistPickModal">
+  <div class="modal" style="max-width:560px;">
+    <button class="modal-close" onclick="document.getElementById('playlistPickModal').classList.add('hidden')">✕</button>
+    <div class="modal-title">＋ Spiel zur Liste hinzufügen</div>
+    <div class="search-wrap" style="margin-bottom:12px;">
+      <input type="text" id="playlistPickSearch" placeholder="In Bibliothek suchen…" autocomplete="off">
+    </div>
+    <div id="playlistPickList" style="max-height:50vh;overflow-y:auto;display:flex;flex-direction:column;gap:6px;"></div>
+    <p id="playlistPickEmpty" style="color:var(--muted);font-size:13px;text-align:center;padding:14px;display:none;">Keine passenden Spiele gefunden.</p>
+  </div>
+</div>
+
+<!-- PLAYLIST: RANDOM CONFIG -->
+<div class="modal-overlay hidden" id="playlistRandomModal">
+  <div class="modal" style="max-width:420px;">
+    <button class="modal-close" onclick="document.getElementById('playlistRandomModal').classList.add('hidden')">✕</button>
+    <div class="modal-title">🎲 Zufällig hinzufügen</div>
+    <div class="form-group" style="margin-bottom:12px;">
+      <label>Anzahl</label>
+      <select id="playlistRandomCount"></select>
+    </div>
+    <div class="form-group" style="margin-bottom:14px;">
+      <label>Pool</label>
+      <select id="playlistRandomPool">
+        <option value="backlog" selected>Nur Backlog</option>
+        <option value="backlog_playing">Backlog + Aktuell</option>
+        <option value="all">Alle (außer Durchgespielt &amp; Abgebrochen)</option>
+      </select>
+    </div>
+    <p id="playlistRandomInfo" style="color:var(--muted);font-size:12px;margin-bottom:14px;"></p>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-ghost" style="flex:1;" onclick="document.getElementById('playlistRandomModal').classList.add('hidden')">Abbrechen</button>
+      <button class="btn btn-primary" style="flex:1;" id="playlistRandomConfirm">🎲 Würfeln</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+
+// Open/close add form via single .open class (CSS handles all visibility)
+function setAddFormOpen(open){
+  const f=document.getElementById('addForm');
+  if(!f)return;
+  f.classList.toggle('open',open);
+}
+// ─── CONFIG ───────────────────────────────────────────────────────────────
+const RAWG_KEY='43ad5537da7644b2a23d67661ae38c96';
+const STORAGE_KEY='gamevault_v4';
+
+// ─── CLOUD SYNC (JSONBin) ─────────────────────────────────────────────────
+// Credentials are NOT stored in this file. They are entered once per device
+// and saved only in this browser's local storage.
+const CRED_KEY='gamevault_cloud_cred';
+let JSONBIN_ID=null;
+let JSONBIN_KEY=null;
+let JSONBIN_URL=null;
+let cloudEnabled=false;
+let cloudStatus='idle'; // idle | loading | saving | ok | error
+let saveDebounce=null;
+
+function loadCloudCreds(){
+  try{
+    const c=JSON.parse(localStorage.getItem(CRED_KEY)||'null');
+    if(c && c.id && c.key){
+      JSONBIN_ID=c.id;
+      JSONBIN_KEY=c.key;
+      JSONBIN_URL=`https://api.jsonbin.io/v3/b/${JSONBIN_ID}`;
+      cloudEnabled=true;
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+
+function saveCloudCreds(id,key){
+  localStorage.setItem(CRED_KEY,JSON.stringify({id:id.trim(),key:key.trim()}));
+  loadCloudCreds();
+}
+
+function clearCloudCreds(){
+  localStorage.removeItem(CRED_KEY);
+  JSONBIN_ID=JSONBIN_KEY=JSONBIN_URL=null;
+  cloudEnabled=false;
+}
+
+const ALL_PLATFORMS=[
+  {group:'PC Launcher', items:['Steam','GOG','Epic Games Store','EA App','Ubisoft Connect','Battle.net','Xbox PC / Game Pass','PlayStation PC']},
+  {group:'PC / Sonstige', items:['PC','Mac','Mobile','Emulator','Sonstige']},
+  {group:'PlayStation', items:['PlayStation 2','PlayStation 3','PlayStation 4','PlayStation 5','PSP','PS Vita']},
+  {group:'Xbox', items:['Xbox','Xbox 360','Xbox One','Xbox Series X/S']},
+  {group:'Nintendo', items:['Nintendo 64','GameCube','Wii','Wii U','Nintendo Switch','Nintendo Switch 2','Game Boy / GBA','Nintendo DS','Nintendo 3DS']},
+  {group:'SEGA', items:['SEGA Mega Drive','SEGA Saturn','SEGA Dreamcast']},
+];
+const ALL_PLATFORM_NAMES=ALL_PLATFORMS.flatMap(g=>g.items);
+
+const STATUS_LABELS={playing:'Aktuell',beaten:'Durchgespielt',backlog:'Backlog',wishlist:'Wunschliste',dropped:'Abgebrochen'};
+
+const PLATFORM_MAP={
+  'PC':'PC','macOS':'Mac','iOS':'Mobile','Android':'Mobile',
+  'PlayStation 2':'PlayStation 2','PlayStation 3':'PlayStation 3','PlayStation 4':'PlayStation 4','PlayStation 5':'PlayStation 5','PSP':'PSP','PS Vita':'PS Vita',
+  'Xbox':'Xbox','Xbox 360':'Xbox 360','Xbox One':'Xbox One','Xbox Series S/X':'Xbox Series X/S',
+  'Nintendo 64':'Nintendo 64','GameCube':'GameCube','Wii':'Wii','Wii U':'Wii U','Nintendo Switch':'Nintendo Switch','Nintendo Switch 2':'Nintendo Switch 2','Game Boy Advance':'Game Boy / GBA','Nintendo DS':'Nintendo DS','Nintendo 3DS':'Nintendo 3DS',
+  'SEGA Mega Drive':'SEGA Mega Drive','SEGA Saturn':'SEGA Saturn','Dreamcast':'SEGA Dreamcast',
+};
+const GENRE_MAP={
+  'action':'Action','role-playing-games-rpg':'RPG','adventure':'Adventure','strategy':'Strategie',
+  'shooter':'Shooter','platformer':'Platformer','simulation':'Simulation','sports':'Sport','puzzle':'Puzzle',
+};
+
+// ─── DATA ─────────────────────────────────────────────────────────────────
+// platforms is now always an array
+const defaultGames=[
+  {id:1,title:'The Witcher 3',status:'beaten',platforms:['PC'],genre:'RPG',rating:10,plays:2,emoji:'🐺',notes:'Absolutes Meisterwerk',coverUrl:'https://media.rawg.io/media/games/618/618c2031a07bbdde6cf90ee39c6f1106.jpg'},
+  {id:2,title:'Cyberpunk 2077',status:'backlog',platforms:['PC'],genre:'RPG',rating:null,plays:0,emoji:'🌆',notes:'Nach den Patches endlich spielen',coverUrl:'https://media.rawg.io/media/games/26d/26d4437715bee60138dab4a7c8c59c92.jpg'},
+  {id:3,title:'Elden Ring',status:'backlog',platforms:['PlayStation 5','PC'],genre:'Action',rating:8.5,plays:1,emoji:'⚔️',notes:'Auf PS5 und PC',coverUrl:'https://media.rawg.io/media/games/3ea/3ea3c9bbd940b6cb7f2139e42d3d443f.jpg'},
+  {id:4,title:'Hollow Knight',status:'backlog',platforms:['Nintendo Switch'],genre:'Platformer',rating:null,plays:0,emoji:'🦋',notes:'Für lange Zugfahrten',coverUrl:'https://media.rawg.io/media/games/4cf/4cfc6b7f1850590a4634b08bfab308ab.jpg'},
+  {id:5,title:"Baldur's Gate 3",status:'wishlist',platforms:['PC'],genre:'RPG',rating:null,plays:0,emoji:'🎲',notes:'Sobald Zeit ist',coverUrl:'https://media.rawg.io/media/games/34b/34b1f1350a1ef1f7c3b6132fdb91fa0a.jpg'},
+];
+
+function migrate(arr){
+  return arr.map(g=>({
+    ...g,
+    platforms: g.platforms ? g.platforms : (g.platform ? [g.platform] : []),
+    status: g.status==='owned' ? 'backlog' : g.status,
+    isFavorite: !!g.isFavorite,
+  }));
+}
+
+function loadLocal(){
+  try{
+    const r=localStorage.getItem(STORAGE_KEY);
+    if(!r) return defaultGames;
+    return migrate(JSON.parse(r));
+  }catch{return defaultGames;}
+}
+
+function saveLocal(g){
+  try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(g)); }catch(e){}
+}
+
+function loadPlaylistLocal(){
+  try{
+    const r=localStorage.getItem(PLAYLIST_STORAGE_KEY);
+    if(!r) return {slots:5,gameIds:[]};
+    const p=JSON.parse(r);
+    return {slots:5, gameIds:Array.isArray(p.gameIds)?p.gameIds.slice(0,5):[]};
+  }catch{return {slots:5,gameIds:[]};}
+}
+function savePlaylistLocal(p){
+  try{ localStorage.setItem(PLAYLIST_STORAGE_KEY,JSON.stringify(p)); }catch(e){}
+}
+
+// Save = local immediately + cloud (debounced)
+function save(g){
+  saveLocal(g);
+  savePlaylistLocal(playlist);
+  if(!cloudEnabled) return;
+  clearTimeout(saveDebounce);
+  saveDebounce=setTimeout(()=>saveCloud(g),800);
+}
+
+async function saveCloud(g){
+  if(!cloudEnabled) return;
+  setCloudStatus('saving');
+  try{
+    const res=await fetch(JSONBIN_URL,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json','X-Master-Key':JSONBIN_KEY},
+      body:JSON.stringify({games:g, playlist:playlist}),
+      signal:AbortSignal.timeout(10000),
+    });
+    if(!res.ok) throw new Error('save failed '+res.status);
+    setCloudStatus('ok');
+  }catch(e){
+    setCloudStatus('error');
+  }
+}
+
+async function loadCloud(){
+  if(!cloudEnabled) return null;
+  setCloudStatus('loading');
+  try{
+    const res=await fetch(`${JSONBIN_URL}/latest`,{
+      headers:{'X-Master-Key':JSONBIN_KEY},
+      signal:AbortSignal.timeout(10000),
+    });
+    if(!res.ok) throw new Error('load failed '+res.status);
+    const data=await res.json();
+    const record=data.record||{};
+    const cloudGames=Array.isArray(record.games)?record.games:(Array.isArray(record)?record:null);
+    // Pull playlist if present
+    if(record && record.playlist && typeof record.playlist==='object'){
+      const p=record.playlist;
+      playlist={slots:5, gameIds:Array.isArray(p.gameIds)?p.gameIds.slice(0,5):[]};
+      savePlaylistLocal(playlist);
+    }
+    setCloudStatus('ok');
+    if(cloudGames && cloudGames.length){
+      return migrate(cloudGames);
+    }
+    // Cloud is empty → push current local data up so it isn't lost
+    if(games && games.length){ saveCloud(games); }
+    return null;
+  }catch(e){
+    setCloudStatus('error');
+    return null;
+  }
+}
+
+function setCloudStatus(s){
+  cloudStatus=s;
+  const el=document.getElementById('cloudStatus');
+  if(!el) return;
+  const map={
+    idle:    {t:'☁ Cloud',                c:'var(--muted)'},
+    notset:  {t:'☁ Einrichten',           c:'var(--accent3)'},
+    loading: {t:'☁ Lade…',                c:'var(--accent3)'},
+    saving:  {t:'☁ Speichere…',           c:'var(--accent3)'},
+    ok:      {t:'☁ Synchronisiert',       c:'var(--green)'},
+    error:   {t:'⚠ Offline (nur lokal)',  c:'var(--red)'},
+  };
+  const m=map[s]||map.idle;
+  el.textContent=m.t;
+  el.style.color=m.c;
+}
+
+let activeTab='all',searchQuery='',platformFilter='',genreFilter='',yearFilter='',releaseYearFilter='',sortOrder='az';
+// "Als Nächstes" — ordered list of up to 5 games the user plans to play next
+let playlist={slots:5, gameIds:[]};
+const PLAYLIST_STORAGE_KEY='gamevault_playlist_v1';
+const PLAYLIST_DEFAULT_POOL='backlog';
+
+let games=loadLocal();
+let nextId=games.length?Math.max(...games.map(g=>g.id))+1:1;
+playlist=loadPlaylistLocal();
+// Clean up playlist: remove ids that no longer exist
+playlist.gameIds=playlist.gameIds.filter(id=>games.some(g=>g.id===id));
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function scoreColor(r){return r>=8?'#10b981':r>=6?'#f59e0b':r>=4?'#f97316':'#ef4444';}
+function renderScore(r){
+  if(r===null||r===undefined||r==='')return'';
+  const col=scoreColor(r),pct=(r/10)*100;
+  return`<span class="tag tag-rating"><span class="score-display"><span style="font-weight:700;color:${col}">${r}/10</span><span class="score-bar"><span class="score-fill" style="width:${pct}%;background:${col}"></span></span></span></span>`;
+}
+function renderPlays(p){return(!p||p<=0)?'':`<span class="tag tag-plays">🔁 ${p}×</span>`;}
+function setSelect(id,val){const s=document.getElementById(id);for(const o of s.options)o.selected=(o.value===val||o.text===val);}
+function getPlatforms(g){return Array.isArray(g.platforms)?g.platforms:g.platform?[g.platform]:[];}
+
+// ─── PLATFORM MULTI-PICKER ────────────────────────────────────────────────
+function buildPlatPicker(pickerId, inputId, dropId, initial=[]) {
+  const picker=document.getElementById(pickerId);
+  const input=document.getElementById(inputId);
+  const drop=document.getElementById(dropId);
+  let selected=[...initial];
+
+  function refresh(){
+    picker.querySelectorAll('.plat-pill').forEach(p=>p.remove());
+    const wrap=picker.querySelector('.plat-add-wrap');
+    selected.forEach(p=>{
+      const pill=document.createElement('span');
+      pill.className='plat-pill';
+      const label=document.createTextNode(p);
+      const btn=document.createElement('button');
+      btn.textContent='×';
+      btn.addEventListener('click',()=>{
+        selected=selected.filter(s=>s!==p);
+        refresh();
+      });
+      pill.appendChild(label);
+      pill.appendChild(btn);
+      picker.insertBefore(pill,wrap);
+    });
+    input.placeholder=selected.length?'':'Plattform tippen oder auswählen…';
+  }
+
+  function showDrop(filter=''){
+    let html='';
+    ALL_PLATFORMS.forEach(g=>{
+      const visible=g.items.filter(i=>!selected.includes(i)&&i.toLowerCase().includes(filter.toLowerCase()));
+      if(!visible.length)return;
+      html+=`<div class="plat-opt-group">${g.group}</div>`;
+      visible.forEach(i=>{html+=`<div class="plat-opt" data-val="${esc(i)}">${esc(i)}</div>`;});
+    });
+    if(!html){drop.classList.add('hidden');return;}
+    drop.innerHTML=html;
+    drop.classList.remove('hidden');
+    drop.querySelectorAll('.plat-opt').forEach(el=>{
+      el.addEventListener('mousedown',e=>{
+        e.preventDefault();
+        if(!selected.includes(el.dataset.val)){
+          selected.push(el.dataset.val);
+          refresh();
+        }
+        drop.classList.add('hidden');
+        input.value='';
+      });
+    });
+  }
+
+  input.addEventListener('focus',()=>showDrop(input.value));
+  input.addEventListener('input',()=>showDrop(input.value));
+  input.addEventListener('blur',()=>setTimeout(()=>drop.classList.add('hidden'),150));
+
+  refresh();
+  return {
+    getSelected:()=>selected,
+    setSelected:(arr)=>{selected=[...arr];refresh();}
+  };
+}
+
+let newPlatPicker, editPlatPicker, newYearPicker, editYearPicker;
+
+// ─── YEAR MULTI-PICKER ────────────────────────────────────────────────────
+function buildYearPicker(pickerId, inputId, dropId, initial=[]) {
+  const picker=document.getElementById(pickerId);
+  const input=document.getElementById(inputId);
+  const drop=document.getElementById(dropId);
+  let selected=[...initial].map(String);
+
+  function refresh(){
+    picker.querySelectorAll('.plat-pill').forEach(p=>p.remove());
+    const wrap=picker.querySelector('.plat-add-wrap');
+    selected.forEach(y=>{
+      const pill=document.createElement('span');
+      pill.className='plat-pill';
+      const label=document.createTextNode(y);
+      const btn=document.createElement('button');
+      btn.textContent='×';
+      btn.addEventListener('click',()=>{selected=selected.filter(s=>s!==y);refresh();});
+      pill.appendChild(label);pill.appendChild(btn);
+      picker.insertBefore(pill,wrap);
+    });
+    input.placeholder=selected.length?'':'Jahr eingeben, z.B. 2024…';
+  }
+
+  function showSuggestions(){
+    const val=input.value.trim();
+    const cur=new Date().getFullYear();
+    // show last 10 years as quick suggestions, filtered by input
+    const suggestions=[];
+    for(let y=cur;y>=1980;y--){
+      if(!selected.includes(String(y))&&(val===''||String(y).startsWith(val))) suggestions.push(y);
+      if(suggestions.length>=8) break;
+    }
+    if(!suggestions.length){drop.classList.add('hidden');return;}
+    drop.innerHTML=suggestions.map(y=>`<div class="plat-opt" data-val="${y}">${y}</div>`).join('');
+    drop.classList.remove('hidden');
+    drop.querySelectorAll('.plat-opt').forEach(el=>{
+      el.addEventListener('mousedown',e=>{
+        e.preventDefault();
+        const v=el.dataset.val;
+        if(!selected.includes(v)){selected.push(v);selected.sort((a,b)=>b-a);refresh();}
+        drop.classList.add('hidden');input.value='';
+      });
+    });
+  }
+
+  input.addEventListener('focus',showSuggestions);
+  input.addEventListener('input',showSuggestions);
+  input.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){
+      e.preventDefault();
+      const v=input.value.trim();
+      const n=parseInt(v);
+      if(v&&n>=1970&&n<=2099&&!selected.includes(v)){
+        selected.push(v);selected.sort((a,b)=>b-a);refresh();
+      }
+      drop.classList.add('hidden');input.value='';
+    }
+  });
+  input.addEventListener('blur',()=>setTimeout(()=>drop.classList.add('hidden'),150));
+
+  refresh();
+  return {
+    getSelected:()=>selected,
+    setSelected:(arr)=>{selected=[...arr].map(String).sort((a,b)=>b-a);refresh();}
+  };
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────
+function getFiltered(){
+  let result=games.filter(g=>{
+    const plats=getPlatforms(g);
+    const years=Array.isArray(g.beatenYears)?g.beatenYears:[];
+    return(activeTab==='all'||g.status===activeTab)
+      &&(!searchQuery||g.title.toLowerCase().includes(searchQuery.toLowerCase()))
+      &&(!platformFilter||(platformFilter==='__none__'?plats.length===0:plats.includes(platformFilter)))
+      &&(!genreFilter||(genreFilter==='__none__'?!g.genre:g.genre===genreFilter))
+      &&(!yearFilter||years.includes(yearFilter))
+      &&(!releaseYearFilter||String(g.releaseYear||'')=== releaseYearFilter);
+  });
+  result=sortGames(result, sortOrder);
+  return result;
+}
+
+// Comparator that pushes null/undefined values to the end regardless of direction
+function sortGames(arr, order){
+  const titleAsc=(a,b)=>a.title.localeCompare(b.title,'de');
+  // Helper: numeric compare where null/undefined always go last
+  const numCmp=(a,b,dir)=>{
+    const av=a===null||a===undefined||Number.isNaN(a);
+    const bv=b===null||b===undefined||Number.isNaN(b);
+    if(av&&bv)return 0;
+    if(av)return 1;     // missing → bottom
+    if(bv)return -1;    // missing → bottom
+    return dir==='desc'?(b-a):(a-b);
+  };
+  const sorters={
+    az:        (a,b)=>titleAsc(a,b),
+    za:        (a,b)=>-titleAsc(a,b),
+    ratingDesc:(a,b)=>numCmp(a.rating,b.rating,'desc')||titleAsc(a,b),
+    ratingAsc: (a,b)=>numCmp(a.rating,b.rating,'asc') ||titleAsc(a,b),
+    releaseDesc:(a,b)=>numCmp(a.releaseYear,b.releaseYear,'desc')||titleAsc(a,b),
+    releaseAsc: (a,b)=>numCmp(a.releaseYear,b.releaseYear,'asc') ||titleAsc(a,b),
+    addedDesc: (a,b)=>(b.id-a.id),  // higher id = added later
+    addedAsc:  (a,b)=>(a.id-b.id),
+    playsDesc: (a,b)=>numCmp(a.plays||0,b.plays||0,'desc')||titleAsc(a,b),
+  };
+  const cmp=sorters[order]||sorters.az;
+  return [...arr].sort(cmp);
+}
+
+function updateYearFilter(){
+  // Durchgespielt-Jahre
+  const sel=document.getElementById('yearFilter');
+  const cur=sel.value;
+  const years=[...new Set(games.flatMap(g=>Array.isArray(g.beatenYears)?g.beatenYears:[]))].sort((a,b)=>b-a);
+  sel.innerHTML='<option value="">Alle Durchspiel-Jahre</option>'+years.map(y=>`<option value="${y}">${y}</option>`).join('');
+  if(years.includes(cur)) sel.value=cur;
+
+  // Erscheinungsjahre
+  const rsel=document.getElementById('releaseYearFilter');
+  const rcur=rsel.value;
+  const ryears=[...new Set(games.map(g=>g.releaseYear).filter(Boolean))].sort((a,b)=>b-a);
+  rsel.innerHTML='<option value="">Alle Erscheinungsjahre</option>'+ryears.map(y=>`<option value="${y}">${y}</option>`).join('');
+  if(ryears.includes(parseInt(rcur))) rsel.value=rcur;
+
+  // Plattformen — sortiert nach Häufigkeit (am häufigsten oben)
+  const psel=document.getElementById('platformFilter');
+  if(psel){
+    const pcur=psel.value;
+    const platCounts={};
+    let platNone=0;
+    games.forEach(g=>{
+      const ps=getPlatforms(g);
+      if(!ps.length){platNone++;return;}
+      ps.forEach(p=>{if(p)platCounts[p]=(platCounts[p]||0)+1;});
+    });
+    const platsSorted=Object.entries(platCounts).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'de'));
+    let html='<option value="">Alle Plattformen</option>'+
+      platsSorted.map(([p,n])=>`<option value="${esc(p)}">${esc(p)} (${n})</option>`).join('');
+    if(platNone>0) html+=`<option value="__none__">Ohne Plattform (${platNone})</option>`;
+    psel.innerHTML=html;
+    // restore selection if still valid
+    if(pcur==='__none__' && platNone>0) psel.value='__none__';
+    else if(platsSorted.some(([p])=>p===pcur)) psel.value=pcur;
+    else psel.value='';
+  }
+
+  // Genres — sortiert nach Häufigkeit
+  const gsel=document.getElementById('genreFilter');
+  if(gsel){
+    const gcur=gsel.value;
+    const genreCounts={};
+    let genreNone=0;
+    games.forEach(g=>{
+      if(!g.genre)genreNone++;
+      else genreCounts[g.genre]=(genreCounts[g.genre]||0)+1;
+    });
+    const genresSorted=Object.entries(genreCounts).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'de'));
+    let ghtml='<option value="">Alle Genres</option>'+
+      genresSorted.map(([g,n])=>`<option value="${esc(g)}">${esc(g)} (${n})</option>`).join('');
+    if(genreNone>0) ghtml+=`<option value="__none__">Ohne Genre (${genreNone})</option>`;
+    gsel.innerHTML=ghtml;
+    if(gcur==='__none__' && genreNone>0) gsel.value='__none__';
+    else if(genresSorted.some(([g])=>g===gcur)) gsel.value=gcur;
+    else gsel.value='';
+  }
+}
+
+function updateStats(){
+  const counts={all:games.length,playing:0,beaten:0,backlog:0,wishlist:0,dropped:0};
+  games.forEach(g=>{if(counts[g.status]!==undefined)counts[g.status]++;});
+  // tab counts
+  Object.entries(counts).forEach(([k,v])=>{
+    const el=document.getElementById('tc-'+k);
+    if(el)el.textContent=v;
+  });
+  // playlist tab counter (independent of playlist view)
+  const plEl=document.getElementById('tc-playlist');
+  if(plEl)plEl.textContent=playlist.gameIds.length;
+  // filter badge
+  const active=[platformFilter,genreFilter,releaseYearFilter,yearFilter].filter(Boolean).length;
+  const badge=document.getElementById('filterBadge');
+  if(badge){badge.textContent=active;badge.classList.toggle('hidden',active===0);}
+  updateYearFilter();
+}
+
+function render(){
+  const list=document.getElementById('gameList'),empty=document.getElementById('emptyState');
+  const playlistSection=document.getElementById('playlistSection');
+  updateStats();
+
+  // PLAYLIST TAB → different view
+  if(activeTab==='playlist'){
+    if(list)list.innerHTML='';
+    if(empty)empty.classList.add('hidden');
+    const rc=document.getElementById('resultsCount');
+    if(rc){rc.innerHTML='';rc.style.display='none';}
+    // hide filter bar / panel in playlist view since they don't apply
+    const fb=document.querySelector('.filter-bar');
+    if(fb)fb.style.display='none';
+    const fp=document.getElementById('filterPanel');
+    if(fp&&!fp.classList.contains('hidden'))fp.classList.add('hidden');
+    if(playlistSection){playlistSection.style.display='block';renderPlaylist();}
+    return;
+  }
+
+  // Restore filter bar for normal views
+  const fb=document.querySelector('.filter-bar');
+  if(fb)fb.style.display='';
+
+  if(playlistSection)playlistSection.style.display='none';
+
+  const filtered=getFiltered();
+
+  // results counter — only visible when a filter/search/tab is active
+  const rc=document.getElementById('resultsCount');
+  if(rc){
+    const total=games.length;
+    const isFiltered=activeTab!=='all'||!!searchQuery||!!platformFilter||!!genreFilter||!!yearFilter||!!releaseYearFilter;
+    const n=filtered.length;
+    if(isFiltered){
+      rc.innerHTML=`<b>${n}</b> von ${total} ${total===1?'Spiel':'Spielen'} angezeigt`;
+      rc.style.display='block';
+    }else{
+      rc.innerHTML='';
+      rc.style.display='none';
+    }
+  }
+
+  if(!filtered.length){list.innerHTML='';empty.classList.remove('hidden');return;}
+  empty.classList.add('hidden');
+
+  const statusDotClass={playing:'sdot-playing',beaten:'sdot-beaten',backlog:'sdot-backlog',wishlist:'sdot-wishlist',dropped:'sdot-dropped'};
+  const inPlaylist=id=>playlist.gameIds.includes(id);
+
+  list.innerHTML=filtered.map(g=>{
+    const dot=statusDotClass[g.status]||'sdot-backlog';
+    const coverHtml=g.coverUrl
+      ?`<img class="game-tile-cover" src="${esc(g.coverUrl)}" loading="lazy" onerror="this.style.display='none';this.nextSibling.style.display='flex'"><div class="game-tile-cover-ph" style="display:none;">🎮</div>`
+      :`<div class="game-tile-cover-ph">🎮</div>`;
+    const playlistBadge=inPlaylist(g.id)?'<div class="game-tile-playlist" title="In Playlist">🎯</div>':'';
+    const favBadge=g.isFavorite?`<div class="game-tile-fav" title="Lieblingsspiel"${inPlaylist(g.id)?' style="top:24px;"':''}>👑</div>`:'';
+    return`<div class="game-card" data-id="${g.id}" onclick="openDetail(${g.id})">
+      ${coverHtml}
+      <div class="game-tile-status ${dot}" title="${STATUS_LABELS[g.status]||''}"></div>
+      ${playlistBadge}
+      ${favBadge}
+      <div class="game-tile-footer">
+        <div class="game-tile-title">${esc(g.title)}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══ PLAYLIST / CHALLENGE ════════════════════════════════════════════════
+function getPlaylistGames(){
+  // Returns ordered list of playlist games (objects), skipping ids that no longer exist
+  const out=[];
+  playlist.gameIds.forEach(id=>{const g=games.find(g=>g.id===id);if(g)out.push(g);});
+  return out;
+}
+
+function syncPlaylistTabCount(){
+  const el=document.getElementById('tc-playlist');
+  if(el)el.textContent=playlist.gameIds.length;
+}
+
+function renderPlaylist(){
+  const grid=document.getElementById('playlistGrid');
+  if(!grid) return;
+
+  const items=getPlaylistGames();
+  const total=playlist.slots;
+
+  const statusDotClass={playing:'sdot-playing',beaten:'sdot-beaten',backlog:'sdot-backlog',wishlist:'sdot-wishlist',dropped:'sdot-dropped'};
+
+  let html='';
+  for(let i=0;i<total;i++){
+    const g=items[i];
+    if(g){
+      const dot=statusDotClass[g.status]||'sdot-backlog';
+      const coverHtml=g.coverUrl
+        ?`<img class="pl-row-cover" src="${esc(g.coverUrl)}" loading="lazy" onerror="this.style.display='none';this.nextSibling.style.display='flex'"><div class="pl-row-cover pl-row-cover-ph" style="display:none;">🎮</div>`
+        :`<div class="pl-row-cover pl-row-cover-ph">🎮</div>`;
+      const isFirst=i===0, isLast=i===items.length-1;
+      html+=`<div class="pl-row" data-id="${g.id}">
+        <div class="pl-row-pos">${i+1}</div>
+        <div class="pl-row-cover-wrap" onclick="openDetail(${g.id})">${coverHtml}</div>
+        <div class="pl-row-body" onclick="openDetail(${g.id})">
+          <div class="pl-row-title">${g.isFavorite?'👑 ':''}${esc(g.title)}</div>
+          <div class="pl-row-meta"><span class="pl-status-dot ${dot}"></span>${STATUS_LABELS[g.status]||''}${g.genre?' · '+esc(g.genre):''}</div>
+        </div>
+        <div class="pl-row-controls">
+          <button class="pl-arrow" ${isFirst?'disabled':''} title="Nach oben" onclick="movePlaylistItem(${g.id},-1)">▲</button>
+          <button class="pl-arrow" ${isLast?'disabled':''} title="Nach unten" onclick="movePlaylistItem(${g.id},1)">▼</button>
+          <button class="pl-remove" title="Entfernen" onclick="removeFromPlaylist(${g.id})">✕</button>
+        </div>
+      </div>`;
+    }else{
+      html+=`<div class="pl-row pl-row-empty" onclick="openPlaylistPick()">
+        <div class="pl-row-pos pl-row-pos-empty">${i+1}</div>
+        <div class="pl-row-empty-text">＋ Spiel hinzufügen</div>
+      </div>`;
+    }
+  }
+  grid.innerHTML=html;
+  syncPlaylistTabCount();
+}
+
+function movePlaylistItem(id,dir){
+  const ids=playlist.gameIds.slice();
+  const i=ids.indexOf(id);
+  if(i<0)return;
+  const j=i+dir;
+  if(j<0||j>=ids.length)return;
+  [ids[i],ids[j]]=[ids[j],ids[i]];
+  playlist.gameIds=ids;
+  save(games);
+  renderPlaylist();
+}
+
+function addToPlaylist(id){
+  if(playlist.gameIds.length>=playlist.slots){
+    alert(`Liste ist voll (${playlist.slots}/${playlist.slots}). Entferne erst ein Spiel.`);
+    return false;
+  }
+  if(playlist.gameIds.includes(id))return false;
+  playlist.gameIds.push(id);
+  save(games);
+  if(activeTab==='playlist')renderPlaylist();
+  else render(); // refresh playlist marker on tile
+  return true;
+}
+
+function removeFromPlaylist(id){
+  const idx=playlist.gameIds.indexOf(id);
+  if(idx===-1)return;
+  playlist.gameIds.splice(idx,1);
+  save(games);
+  if(activeTab==='playlist')renderPlaylist();
+  else render();
+}
+
+function clearPlaylist(skipConfirm){
+  if(!skipConfirm){
+    if(!confirm('Liste wirklich leeren?'))return;
+  }
+  playlist.gameIds=[];
+  save(games);
+  renderPlaylist();
+}
+
+// ─── Pick game modal ──────────────────────────────────────────────────────
+function openPlaylistPick(){
+  if(playlist.gameIds.length>=playlist.slots){
+    alert(`Liste ist voll (${playlist.slots}/${playlist.slots}). Entferne erst ein Spiel.`);
+    return;
+  }
+  document.getElementById('playlistPickModal').classList.remove('hidden');
+  document.getElementById('playlistPickSearch').value='';
+  renderPlaylistPickList('');
+  setTimeout(()=>document.getElementById('playlistPickSearch').focus(),50);
+}
+
+function renderPlaylistPickList(q){
+  const list=document.getElementById('playlistPickList');
+  const empty=document.getElementById('playlistPickEmpty');
+  const query=(q||'').toLowerCase().trim();
+  const available=games.filter(g=>!playlist.gameIds.includes(g.id) && (!query||g.title.toLowerCase().includes(query)));
+  // sort: backlog/playing first, then others; alphabetically within
+  const order={backlog:0,playing:1,wishlist:2,beaten:3,dropped:4};
+  available.sort((a,b)=>(order[a.status]??9)-(order[b.status]??9)||a.title.localeCompare(b.title,'de'));
+  if(!available.length){
+    list.innerHTML='';
+    empty.style.display='block';
+    return;
+  }
+  empty.style.display='none';
+  list.innerHTML=available.slice(0,80).map(g=>`
+    <div class="rawg-result" onclick="addToPlaylist(${g.id});document.getElementById('playlistPickModal').classList.add('hidden');">
+      <div style="width:36px;height:48px;border-radius:5px;background:var(--surface2);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+        ${g.coverUrl?`<img src="${esc(g.coverUrl)}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">`:'<span style="font-size:18px;">🎮</span>'}
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(g.title)}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">${STATUS_LABELS[g.status]||g.status}${g.genre?' · '+esc(g.genre):''}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ─── Random fill ──────────────────────────────────────────────────────────
+function openPlaylistRandom(){
+  const free=playlist.slots-playlist.gameIds.length;
+  if(free<=0){
+    alert(`Liste ist voll (${playlist.slots}/${playlist.slots}). Entferne erst ein Spiel.`);
+    return;
+  }
+  // count select
+  const countSel=document.getElementById('playlistRandomCount');
+  countSel.innerHTML='';
+  for(let i=1;i<=free;i++){
+    const opt=document.createElement('option');opt.value=i;opt.textContent=i+(i===1?' Spiel':' Spiele');
+    if(i===free)opt.selected=true;
+    countSel.appendChild(opt);
+  }
+  document.getElementById('playlistRandomPool').value=PLAYLIST_DEFAULT_POOL;
+  updatePlaylistRandomInfo();
+  document.getElementById('playlistRandomModal').classList.remove('hidden');
+}
+
+function getPoolGames(pool){
+  return games.filter(g=>{
+    if(playlist.gameIds.includes(g.id))return false;
+    if(pool==='backlog')return g.status==='backlog';
+    if(pool==='backlog_playing')return g.status==='backlog'||g.status==='playing';
+    if(pool==='all')return g.status!=='beaten'&&g.status!=='dropped';
+    return false;
+  });
+}
+
+function updatePlaylistRandomInfo(){
+  const pool=document.getElementById('playlistRandomPool').value;
+  const candidates=getPoolGames(pool);
+  const info=document.getElementById('playlistRandomInfo');
+  info.textContent=`${candidates.length} ${candidates.length===1?'Spiel':'Spiele'} verfügbar im gewählten Pool.`;
+}
+
+// Fisher-Yates shuffle — produces a uniform random permutation
+function shuffleArray(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function runPlaylistRandom(){
+  const count=parseInt(document.getElementById('playlistRandomCount').value)||1;
+  const pool=document.getElementById('playlistRandomPool').value;
+  const candidates=getPoolGames(pool);
+  if(!candidates.length){alert('Keine passenden Spiele im gewählten Pool gefunden.');return;}
+  const take=Math.min(count,candidates.length,playlist.slots-playlist.gameIds.length);
+  // Proper uniform shuffle, then take the first N
+  const shuffled=shuffleArray(candidates).slice(0,take);
+  shuffled.forEach(g=>playlist.gameIds.push(g.id));
+  save(games);
+  document.getElementById('playlistRandomModal').classList.add('hidden');
+  if(activeTab==='playlist')renderPlaylist();
+  else render();
+}
+
+// ─── Auto-clean: remove playlist entries when status changes to dropped/wishlist
+function autoCleanPlaylist(){
+  const before=playlist.gameIds.length;
+  playlist.gameIds=playlist.gameIds.filter(id=>{
+    const g=games.find(g=>g.id===id);
+    if(!g)return false; // gone
+    if(g.status==='dropped'||g.status==='wishlist')return false;
+    return true;
+  });
+  return playlist.gameIds.length!==before;
+}
+
+// ─── DETAIL MODAL ─────────────────────────────────────────────────────────
+let detailGameId=null;
+
+function openDetail(id){
+  const g=games.find(g=>g.id===id);if(!g)return;
+  detailGameId=id;
+  const plats=getPlatforms(g);
+  const years=Array.isArray(g.beatenYears)?g.beatenYears:[];
+
+  // Cover
+  document.getElementById('detailCoverWrap').innerHTML=g.coverUrl
+    ?`<img class="detail-cover" src="${esc(g.coverUrl)}" onerror="this.outerHTML='<div class=detail-cover-ph>🎮</div>'">`
+    :`<div class="detail-cover-ph">🎮</div>`;
+
+  // Title
+  document.getElementById('detailTitle').textContent=g.title;
+
+  // Meta tags
+  const meta=[];
+  meta.push(`<span class="status-badge status-${g.status}">${STATUS_LABELS[g.status]||g.status}</span>`);
+  if(g.genre) meta.push(`<span class="tag tag-genre">${esc(g.genre)}</span>`);
+  if(g.releaseYear) meta.push(`<span class="tag tag-year">🗓 ${g.releaseYear}</span>`);
+  if(g.rating!==null&&g.rating!==undefined) meta.push(renderScore(g.rating));
+  document.getElementById('detailMeta').innerHTML=meta.join('');
+
+  // Detail rows
+  const rows=[];
+  if(plats.length) rows.push({label:'Plattform',val:plats.map(p=>`<span class="tag tag-platform">${esc(p)}</span>`).join(' ')});
+  if(g.isFavorite) rows.push({label:'Lieblingsspiel',val:'👑 Ja'});
+  if(g.plays) rows.push({label:'Durchläufe',val:`${g.plays}×`});
+  if(years.length) rows.push({label:'Durchgespielt',val:years.map(y=>`<span class="tag tag-year">📅 ${y}</span>`).join(' ')});
+  if(g.notes) rows.push({label:'Notizen',val:`<em style="color:var(--muted)">${esc(g.notes)}</em>`});
+
+  document.getElementById('detailRows').innerHTML=rows.map(r=>`
+    <div class="detail-row">
+      <span class="detail-row-label">${r.label}</span>
+      <span>${r.val}</span>
+    </div>`).join('');
+
+  // Playlist button state
+  const plBtn=document.getElementById('detailPlaylistBtn');
+  if(plBtn){
+    const inPlaylist=playlist.gameIds.includes(id);
+    if(inPlaylist){
+      plBtn.textContent='✕ Aus Liste';
+      plBtn.style.background='rgba(251,191,36,0.15)';
+    }else{
+      plBtn.textContent='🎯 Zur Liste';
+      plBtn.style.background='transparent';
+    }
+  }
+
+  document.getElementById('detailModal').classList.remove('hidden');
+}
+
+document.getElementById('detailPlaylistBtn').addEventListener('click',()=>{
+  if(!detailGameId)return;
+  if(playlist.gameIds.includes(detailGameId)){
+    removeFromPlaylist(detailGameId);
+  }else{
+    addToPlaylist(detailGameId);
+  }
+  document.getElementById('detailModal').classList.add('hidden');
+});
+
+document.getElementById('closeDetail').addEventListener('click',()=>document.getElementById('detailModal').classList.add('hidden'));
+document.getElementById('detailModal').addEventListener('click',e=>{if(e.target.id==='detailModal')document.getElementById('detailModal').classList.add('hidden');});
+
+document.getElementById('detailEditBtn').addEventListener('click',()=>{
+  document.getElementById('detailModal').classList.add('hidden');
+  openEdit(detailGameId);
+});
+
+document.getElementById('detailDeleteBtn').addEventListener('click',()=>{
+  if(!confirm('Spiel wirklich löschen?'))return;
+  games=games.filter(g=>g.id!==detailGameId);
+  autoCleanPlaylist();
+  save(games);
+  document.getElementById('detailModal').classList.add('hidden');
+  render();
+});
+
+// ─── RAWG SEARCH ──────────────────────────────────────────────────────────
+let rawgTimer=null;
+document.getElementById('rawgSearch').addEventListener('input',function(){
+  clearTimeout(rawgTimer);
+  const q=this.value.trim();
+  const box=document.getElementById('rawgResults');
+  if(q.length<2){box.classList.add('hidden');return;}
+  box.classList.remove('hidden');
+  box.innerHTML='<div class="rawg-msg">🔍 Suche in RAWG-Datenbank…</div>';
+  rawgTimer=setTimeout(()=>doRawgSearch(q),420);
+});
+
+let rawgResultCache=[];
+
+async function doRawgSearch(q){
+  const box=document.getElementById('rawgResults');
+  const rawgUrl=`https://api.rawg.io/api/games?key=${RAWG_KEY}&search=${encodeURIComponent(q)}&page_size=15&search_precise=false&fields=name,background_image,released,platforms,genres,developers`;
+  const strategies=[
+    async()=>{const r=await fetch(rawgUrl,{signal:AbortSignal.timeout(5000)});if(!r.ok)throw new Error();return r.json();},
+    async()=>{const r=await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(rawgUrl)}`,{signal:AbortSignal.timeout(7000)});if(!r.ok)throw new Error();return r.json();},
+    async()=>{const r=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(rawgUrl)}`,{signal:AbortSignal.timeout(7000)});if(!r.ok)throw new Error();const j=await r.json();return JSON.parse(j.contents);},
+    async()=>{const r=await fetch(`https://corsproxy.io/?${encodeURIComponent(rawgUrl)}`,{signal:AbortSignal.timeout(7000)});if(!r.ok)throw new Error();return r.json();},
+  ];
+  let data=null;
+  for(const fn of strategies){try{data=await fn();if(data&&data.results)break;}catch(e){continue;}}
+  if(!data||!data.results){box.innerHTML='<div class="rawg-msg">❌ RAWG-Suche nicht erreichbar.<br><small style="color:var(--muted)">Spiel manuell eingeben oder Seite neu laden.</small></div>';return;}
+  if(!data.results.length){box.innerHTML='<div class="rawg-msg">Kein Ergebnis gefunden.</div>';return;}
+
+  rawgResultCache=data.results;
+  // Build lookup sets of what's already in the library (by RAWG id and by lowercased title)
+  const ownedRawgIds=new Set(games.map(g=>g.rawgId).filter(Boolean));
+  const ownedTitles=new Set(games.map(g=>(g.title||'').toLowerCase().trim()));
+  box.innerHTML=data.results.map((g,i)=>{
+    const img=g.background_image?`<img class="rawg-thumb" src="${esc(g.background_image)}" loading="lazy">`:`<div class="rawg-thumb-ph">🎮</div>`;
+    const plats=g.platforms?g.platforms.slice(0,3).map(p=>p.platform.name).join(', '):'';
+    const year=g.released?g.released.split('-')[0]:'';
+    const owned=ownedRawgIds.has(g.id)||ownedTitles.has((g.name||'').toLowerCase().trim());
+    const ownedBadge=owned?'<span style="background:var(--green);color:var(--bg);font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:6px;letter-spacing:0.5px;">✓ in Bibliothek</span>':'';
+    return`<div class="rawg-item${owned?' rawg-item-owned':''}" data-idx="${i}">
+      ${img}<div class="rawg-info"><div class="rawg-name">${esc(g.name)}${ownedBadge}</div><div class="rawg-meta">${year?year+' · ':''}${esc(plats)}</div></div>
+    </div>`;
+  }).join('');
+
+  box.querySelectorAll('.rawg-item').forEach(el=>{
+    el.addEventListener('click',()=>pickRawg(rawgResultCache[parseInt(el.dataset.idx)]));
+  });
+}
+
+let currentRawgId=null;
+
+function pickRawg(g){
+  // Early duplicate warning: check by rawgId or by case-insensitive title
+  const titleLc=(g.name||'').toLowerCase().trim();
+  const dup=games.find(x=>(g.id && x.rawgId===g.id) || (x.title && x.title.toLowerCase().trim()===titleLc));
+  if(dup){
+    alert(`„${dup.title}" ist bereits in deiner Bibliothek (${STATUS_LABELS[dup.status]||dup.status}).\n\nDu kannst kein doppeltes Spiel hinzufügen.`);
+    document.getElementById('rawgResults').classList.add('hidden');
+    document.getElementById('rawgSearch').value='';
+    return;
+  }
+  currentRawgId=g.id;
+  document.getElementById('newTitle').value=g.name;
+  if(g.background_image){
+    document.getElementById('newCoverUrl').value=g.background_image;
+    const p=document.getElementById('coverPreview');p.src=g.background_image;p.classList.add('visible');
+    document.getElementById('coverPickerHint').style.display='block';
+  }
+  // Release year
+  if(g.released){
+    const yr=g.released.split('-')[0];
+    document.getElementById('newReleaseYear').value=yr;
+  }
+  // Genre
+  if(g.genres){for(const gen of g.genres){const m=GENRE_MAP[gen.slug];if(m){setSelect('newGenre',m);break;}}}
+  // Platforms intentionally left empty — user fills manually
+  document.getElementById('rawgResults').classList.add('hidden');
+  document.getElementById('rawgSearch').value='';
+}
+document.addEventListener('click',e=>{if(!e.target.closest('.rawg-wrap'))document.getElementById('rawgResults').classList.add('hidden');});
+
+// ─── ADD ──────────────────────────────────────────────────────────────────
+document.getElementById('addBtn').addEventListener('click',()=>{
+  const f=document.getElementById('addForm');
+  const open=f.classList.contains('open');
+  setAddFormOpen(!open);
+  if(open)clearAddForm();
+});
+document.getElementById('cancelAdd').addEventListener('click',()=>{
+  setAddFormOpen(false);
+  clearAddForm();
+});
+
+document.getElementById('saveGame').addEventListener('click',()=>{
+  const title=document.getElementById('newTitle').value.trim();
+  if(!title){document.getElementById('newTitle').focus();return;}
+  // Duplicate check: by rawgId (most reliable) or case-insensitive title
+  const titleLc=title.toLowerCase();
+  const dup=games.find(g=>(currentRawgId && g.rawgId===currentRawgId) || (g.title && g.title.toLowerCase().trim()===titleLc));
+  if(dup){
+    alert(`Dieses Spiel ist bereits in deiner Bibliothek:\n\n„${dup.title}" (${STATUS_LABELS[dup.status]||dup.status})`);
+    return;
+  }
+  const rv=document.getElementById('newRating').value,pv=document.getElementById('newPlays').value;
+  const ryv=document.getElementById('newReleaseYear').value;
+  games.push({
+    id:nextId++,title,
+    status:document.getElementById('newStatus').value,
+    platforms:newPlatPicker?newPlatPicker.getSelected():[],
+    genre:document.getElementById('newGenre').value,
+    releaseYear:ryv!==''?parseInt(ryv):null,
+    isFavorite:document.getElementById('newFavorite').checked,
+    rating:rv!==''?parseInt(rv):null,
+    plays:pv!==''?parseInt(pv):0,
+    beatenYears:newYearPicker?newYearPicker.getSelected():[],
+    notes:document.getElementById('newNotes').value.trim(),
+    coverUrl:document.getElementById('newCoverUrl').value||'',
+    rawgId:currentRawgId||null,
+  });
+  setAddFormOpen(false);save(games);clearAddForm();render();
+});
+
+function clearAddForm(){
+  ['newTitle','newNotes','newPlays','newCoverUrl','rawgSearch'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('newFavorite').checked=false;
+  document.getElementById('newRating').selectedIndex=0;
+  document.getElementById('newReleaseYear').selectedIndex=0;
+  document.getElementById('newGenre').selectedIndex=0;
+  setSelect('newStatus','backlog');
+  if(newPlatPicker)newPlatPicker.setSelected([]);
+  if(newYearPicker)newYearPicker.setSelected([]);
+  const p=document.getElementById('coverPreview');p.src='';p.classList.remove('visible');
+  document.getElementById('coverPickerHint').style.display='none';
+  document.getElementById('rawgResults').classList.add('hidden');
+  currentRawgId=null;
+}
+
+// ─── DELETE ───────────────────────────────────────────────────────────────
+function deleteGame(id){if(!confirm('Spiel wirklich löschen?'))return;games=games.filter(g=>g.id!==id);autoCleanPlaylist();save(games);render();}
+
+// ─── EDIT ─────────────────────────────────────────────────────────────────
+function openEdit(id){
+  const g=games.find(g=>g.id===id);if(!g)return;
+  document.getElementById('editId').value=id;
+  document.getElementById('editTitle').value=g.title;
+  document.getElementById('editNotes').value=g.notes||'';
+  document.getElementById('editRating').value=(g.rating!==null&&g.rating!==undefined)?g.rating:'';
+  document.getElementById('editPlays').value=g.plays||0;
+  document.getElementById('editReleaseYear').value=g.releaseYear||'';
+  document.getElementById('editFavorite').checked=!!g.isFavorite;
+  document.getElementById('editCoverUrl').value=g.coverUrl||'';
+  const img=document.getElementById('editCoverImg');
+  if(g.coverUrl){img.src=g.coverUrl;img.style.display='block';}else{img.style.display='none';}
+  currentRawgId=g.rawgId||null;
+  setSelect('editStatus',g.status);setSelect('editGenre',g.genre);
+  if(editPlatPicker)editPlatPicker.setSelected(getPlatforms(g));
+  if(editYearPicker)editYearPicker.setSelected(Array.isArray(g.beatenYears)?g.beatenYears:[]);
+  document.getElementById('editModal').classList.remove('hidden');
+}
+
+['closeEdit','cancelEdit'].forEach(id=>document.getElementById(id).addEventListener('click',()=>document.getElementById('editModal').classList.add('hidden')));
+
+document.getElementById('saveEdit').addEventListener('click',()=>{
+  const id=parseInt(document.getElementById('editId').value);
+  const g=games.find(g=>g.id===id);if(!g)return;
+  g.title=document.getElementById('editTitle').value.trim()||g.title;
+  g.status=document.getElementById('editStatus').value;
+  g.platforms=editPlatPicker?editPlatPicker.getSelected():getPlatforms(g);
+  g.genre=document.getElementById('editGenre').value;
+  const er=document.getElementById('editRating').value;
+  g.rating=er!==''?parseInt(er):null;
+  g.plays=parseInt(document.getElementById('editPlays').value)||0;
+  const ery=document.getElementById('editReleaseYear').value;
+  g.releaseYear=ery!==''?parseInt(ery):null;
+  g.isFavorite=document.getElementById('editFavorite').checked;
+  g.beatenYears=editYearPicker?editYearPicker.getSelected():[];
+  g.notes=document.getElementById('editNotes').value.trim();
+  autoCleanPlaylist();
+  save(games);document.getElementById('editModal').classList.add('hidden');render();
+});
+
+// ─── RANDOM MODAL ─────────────────────────────────────────────────────────
+// Build platform chips from all platforms present in the library
+function buildRandomPlatformChips(){
+  const usedPlats=new Set(games.flatMap(g=>getPlatforms(g)));
+  const container=document.getElementById('platformChips');
+  if(!usedPlats.size){container.innerHTML='<span style="color:var(--muted);font-size:13px;">Keine Plattformen in der Bibliothek</span>';return;}
+  container.innerHTML='';
+  // order by ALL_PLATFORMS list
+  ALL_PLATFORM_NAMES.filter(p=>usedPlats.has(p)).forEach(p=>{
+    const btn=document.createElement('button');
+    btn.className='chip active';
+    btn.dataset.val=p;
+    btn.textContent=p;
+    btn.addEventListener('click',()=>btn.classList.toggle('active'));
+    container.appendChild(btn);
+  });
+  // add an "Alle" toggle shortcut
+  const all=document.createElement('button');
+  all.className='chip';all.textContent='Alle an/aus';all.style.borderStyle='dashed';
+  all.addEventListener('click',()=>{
+    const chips=container.querySelectorAll('[data-val]');
+    const anyOff=[...chips].some(c=>!c.classList.contains('active'));
+    chips.forEach(c=>c.classList.toggle('active',anyOff));
+  });
+  container.appendChild(all);
+}
+
+function getRandomFilters(){
+  const statuses=[...document.querySelectorAll('#statusChips .chip.active')].map(c=>c.dataset.val);
+  const platforms=[...document.querySelectorAll('#platformChips [data-val].active')].map(c=>c.dataset.val);
+  return{statuses,platforms};
+}
+
+let lastRandomId=null;
+
+function doPickRandom(){
+  const{statuses,platforms}=getRandomFilters();
+  let pool=games.filter(g=>{
+    const gPlats=getPlatforms(g);
+    const statusOk=statuses.length===0||statuses.includes(g.status);
+    const platOk=platforms.length===0||gPlats.some(p=>platforms.includes(p));
+    return statusOk&&platOk;
+  });
+  document.getElementById('randomFilters').classList.add('hidden');
+  document.getElementById('randomResult').classList.remove('hidden');
+  const actions=document.getElementById('randomActions');
+
+  if(!pool.length){
+    lastRandomId=null;
+    if(actions)actions.style.display='none';
+    document.getElementById('randomCoverWrap').innerHTML='<div class="random-ph">🤷</div>';
+    document.getElementById('randomName').textContent='Keine Spiele gefunden';
+    document.getElementById('randomMeta').innerHTML='<span style="color:var(--muted);font-size:13px;">Passe die Filter an</span>';
+    return;
+  }
+  const g=pool[Math.floor(Math.random()*pool.length)];
+  lastRandomId=g.id;
+  if(actions)actions.style.display='flex';
+  document.getElementById('randomName').textContent=g.title;
+  document.getElementById('randomCoverWrap').innerHTML=g.coverUrl
+    ?`<img class="random-cover" src="${esc(g.coverUrl)}" onerror="this.outerHTML='<div class=random-ph>${g.emoji||'🎮'}</div>'">`
+    :`<div class="random-ph">${g.emoji||'🎮'}</div>`;
+  const plats=getPlatforms(g);
+  const meta=[];
+  plats.forEach(p=>meta.push(`<span class="tag tag-platform">${esc(p)}</span>`));
+  if(g.genre)meta.push(`<span class="tag tag-genre">${esc(g.genre)}</span>`);
+  if(g.status)meta.push(`<span class="status-badge status-${g.status}" style="font-size:11px;">${STATUS_LABELS[g.status]}</span>`);
+  if(g.rating!==null&&g.rating!==undefined)meta.push(renderScore(g.rating));
+  document.getElementById('randomMeta').innerHTML=`<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">${meta.join('')}</div>`;
+}
+
+document.getElementById('randomBtn').addEventListener('click',()=>{
+  if(!games.length){alert('Füge zuerst Spiele hinzu!');return;}
+  buildRandomPlatformChips();
+  // attach toggle to static status chips
+  document.querySelectorAll('#statusChips .chip').forEach(chip=>{
+    chip.onclick=()=>chip.classList.toggle('active');
+  });
+  // reset to filter view
+  document.getElementById('randomFilters').classList.remove('hidden');
+  document.getElementById('randomResult').classList.add('hidden');
+  document.getElementById('randomModal').classList.remove('hidden');
+});
+
+document.getElementById('doRandomBtn').addEventListener('click',doPickRandom);
+document.getElementById('rerollBtn').addEventListener('click',doPickRandom);
+document.getElementById('randomOpenDetail').addEventListener('click',()=>{
+  if(lastRandomId==null)return;
+  document.getElementById('randomModal').classList.add('hidden');
+  openDetail(lastRandomId);
+});
+document.getElementById('randomOpenEdit').addEventListener('click',()=>{
+  if(lastRandomId==null)return;
+  document.getElementById('randomModal').classList.add('hidden');
+  openEdit(lastRandomId);
+});
+document.getElementById('backToFilters').addEventListener('click',()=>{
+  document.getElementById('randomFilters').classList.remove('hidden');
+  document.getElementById('randomResult').classList.add('hidden');
+});
+['closeRandom'].forEach(id=>document.getElementById(id).addEventListener('click',()=>document.getElementById('randomModal').classList.add('hidden')));
+['randomModal','editModal'].forEach(id=>document.getElementById(id).addEventListener('click',e=>{if(e.target.id===id)document.getElementById(id).classList.add('hidden');}));
+
+// ─── FILTER PANEL TOGGLE ──────────────────────────────────────────────────
+function toggleFilterPanel(){
+  const panel=document.getElementById('filterPanel');
+  const btn=document.getElementById('filterToggleBtn');
+  const open=panel.classList.toggle('hidden');
+  btn.classList.toggle('open',!open);
+}
+
+function resetFilters(){
+  platformFilter='';genreFilter='';releaseYearFilter='';yearFilter='';
+  ['platformFilter','genreFilter','releaseYearFilter','yearFilter'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.selectedIndex=0;
+  });
+  render();
+}
+
+// ─── FILTERS & TABS ───────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');activeTab=tab.dataset.tab;render();
+  });
+});
+document.getElementById('searchInput').addEventListener('input',e=>{searchQuery=e.target.value;render();});
+document.getElementById('platformFilter').addEventListener('change',e=>{platformFilter=e.target.value;render();});
+document.getElementById('genreFilter').addEventListener('change',e=>{genreFilter=e.target.value;render();});
+document.getElementById('releaseYearFilter').addEventListener('change',e=>{releaseYearFilter=e.target.value;render();});
+document.getElementById('yearFilter').addEventListener('change',e=>{yearFilter=e.target.value;render();});
+document.getElementById('sortSelect').addEventListener('change',e=>{sortOrder=e.target.value;render();});
+
+// ─── EXPORT / IMPORT ──────────────────────────────────────────────────────
+document.getElementById('exportBtn').addEventListener('click',()=>{
+  const data=JSON.stringify({version:5,exported:new Date().toISOString(),games,playlist},null,2);
+  const blob=new Blob([data],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`gamevault-backup-${new Date().toISOString().split('T')[0]}.json`;
+  a.click();URL.revokeObjectURL(url);
+});
+
+document.getElementById('importFile').addEventListener('change',function(){
+  const file=this.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const parsed=JSON.parse(e.target.result);
+      const imported=Array.isArray(parsed)?parsed:(parsed.games||null);
+      if(!Array.isArray(imported))throw new Error();
+      const migrated=migrate(imported);
+      if(!confirm(`${migrated.length} Spiele importieren? Deine aktuelle Liste wird ersetzt.`))return;
+      games=migrated;nextId=games.length?Math.max(...games.map(g=>g.id))+1:1;
+      // Restore playlist if present in backup
+      if(parsed && parsed.playlist && typeof parsed.playlist==='object'){
+        const p=parsed.playlist;
+        playlist={slots:5, gameIds:Array.isArray(p.gameIds)?p.gameIds.slice(0,5):[]};
+        // Drop stale ids
+        playlist.gameIds=playlist.gameIds.filter(id=>games.some(g=>g.id===id));
+      }
+      save(games);render();
+      alert(`✅ ${migrated.length} Spiele importiert!`);
+    }catch{alert('❌ Ungültige Datei.');}
+  };
+  reader.readAsText(file);this.value='';
+});
+
+// ─── CSV IMPORT ───────────────────────────────────────────────────────────
+document.getElementById('csvImportFile').addEventListener('change',function(){
+  const file=this.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    const lines=e.target.result.split('\n').map(l=>l.trim()).filter(l=>l.length>0);
+    // Each line: commas are word separators within the title → join with space
+    const titles=lines.map(l=>l.split(',').map(w=>w.trim()).join(' ').trim()).filter(t=>t.length>0);
+    if(!titles.length){alert('❌ Keine Spielnamen gefunden.');return;}
+
+    // Check duplicates against existing library (case-insensitive)
+    const existingTitles=new Set(games.map(g=>g.title.toLowerCase().trim()));
+    const newTitles=titles.filter(t=>!existingTitles.has(t.toLowerCase().trim()));
+    const dupes=titles.length-newTitles.length;
+
+    if(!newTitles.length){alert(`Alle ${dupes} Spiele sind bereits in deiner Bibliothek vorhanden.`);return;}
+
+    const msg=dupes>0
+      ?`${titles.length} Spiele gefunden.\n${dupes} bereits vorhanden (werden übersprungen).\n${newTitles.length} neue Spiele werden importiert mit RAWG-Daten.\n\nJetzt starten?`
+      :`${newTitles.length} Spiele werden mit RAWG-Daten importiert.\n\nJetzt starten?`;
+    if(!confirm(msg))return;
+
+    // Show progress modal
+    openCsvProgress(newTitles.length);
+
+    let imported=0,notFound=0;
+    const newGames=[];
+
+    // Recalculate nextId to avoid duplicate IDs with existing games
+    nextId=games.length?Math.max(...games.map(g=>g.id))+1:1;
+
+    // Process strictly sequentially
+    for(let i=0;i<newTitles.length;i++){
+      const title=newTitles[i]; // bind title to this iteration
+      updateCsvProgress(i+1,newTitles.length,title);
+
+      let gameData=null;
+      try{
+        const rawgUrl=`https://api.rawg.io/api/games?key=${RAWG_KEY}&search=${encodeURIComponent(title)}&page_size=1&search_precise=false`;
+        const strategies=[
+          async()=>{const r=await fetch(rawgUrl,{signal:AbortSignal.timeout(5000)});if(!r.ok)throw new Error();return r.json();},
+          async()=>{const r=await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(rawgUrl)}`,{signal:AbortSignal.timeout(7000)});if(!r.ok)throw new Error();return r.json();},
+          async()=>{const r=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(rawgUrl)}`,{signal:AbortSignal.timeout(7000)});if(!r.ok)throw new Error();const j=await r.json();return JSON.parse(j.contents);},
+        ];
+        let data=null;
+        for(const fn of strategies){try{data=await fn();if(data&&data.results)break;}catch(e){continue;}}
+        if(data&&data.results&&data.results.length>0) gameData=data.results[0];
+      }catch(e){}
+
+      let genre='';
+      if(gameData?.genres?.length){
+        const m=GENRE_MAP[gameData.genres[0].slug];
+        if(m)genre=m;
+      }
+
+      // Use nextId++ and immediately increment to guarantee unique IDs
+      const newId=nextId++;
+      newGames.push({
+        id:newId,
+        title:gameData?gameData.name:title, // RAWG name or original CSV title
+        status:'backlog',
+        platforms:[],
+        genre,
+        rating:null,
+        plays:0,
+        emoji:'🎮',
+        notes:'',
+        coverUrl:gameData?.background_image||'',
+      });
+
+      if(gameData)imported++;else notFound++;
+      // Wait between requests to avoid rate limiting and keep order correct
+      await new Promise(r=>setTimeout(r,400));
+    }
+
+    games=games.concat(newGames);
+    save(games);
+    render();
+    closeCsvProgress();
+    alert(`✅ CSV Import abgeschlossen!\n\n${imported} Spiele mit RAWG-Daten gefunden\n${notFound} Spiele ohne RAWG-Treffer (Titel trotzdem importiert)\n${dupes} Duplikate übersprungen`);
+  };
+  reader.readAsText(file);this.value='';
+});
+
+function openCsvProgress(total){
+  let m=document.getElementById('csvProgressModal');
+  if(!m){
+    m=document.createElement('div');
+    m.id='csvProgressModal';
+    m.className='modal-overlay';
+    m.innerHTML=`<div class="modal" style="max-width:420px;text-align:center;">
+      <div class="modal-title">📋 CSV Import läuft…</div>
+      <p id="csvProgressTitle" style="font-size:14px;color:var(--muted);margin-bottom:16px;min-height:20px;"></p>
+      <div style="background:var(--border);border-radius:4px;height:6px;overflow:hidden;margin-bottom:12px;">
+        <div id="csvProgressFill" style="height:100%;background:var(--accent);border-radius:4px;width:0%;transition:width 0.3s;"></div>
+      </div>
+      <p id="csvProgressCount" style="font-size:13px;color:var(--muted);">0 / ${total}</p>
+      <p style="font-size:12px;color:var(--muted);margin-top:12px;">RAWG wird für jedes Spiel abgefragt — bitte warten…</p>
+    </div>`;
+    document.body.appendChild(m);
+  }else{
+    m.classList.remove('hidden');
+    document.getElementById('csvProgressCount').textContent=`0 / ${total}`;
+    document.getElementById('csvProgressFill').style.width='0%';
+  }
+}
+
+function updateCsvProgress(current,total,title){
+  const pct=Math.round((current/total)*100);
+  const fill=document.getElementById('csvProgressFill');
+  const count=document.getElementById('csvProgressCount');
+  const t=document.getElementById('csvProgressTitle');
+  if(fill)fill.style.width=pct+'%';
+  if(count)count.textContent=`${current} / ${total} (${pct}%)`;
+  if(t)t.textContent=title;
+}
+
+function closeCsvProgress(){
+  const m=document.getElementById('csvProgressModal');
+  if(m)m.classList.add('hidden');
+}
+
+// ─── CLOUD SETUP MODAL ────────────────────────────────────────────────────
+function openCloudModal(){
+  document.getElementById('cloudBinId').value=JSONBIN_ID||'';
+  document.getElementById('cloudKey').value=JSONBIN_KEY||'';
+  document.getElementById('cloudModalMsg').textContent='';
+  document.getElementById('cloudModal').classList.remove('hidden');
+}
+function closeCloudModal(){document.getElementById('cloudModal').classList.add('hidden');}
+
+document.getElementById('cloudStatus').addEventListener('click',openCloudModal);
+document.getElementById('closeCloud').addEventListener('click',closeCloudModal);
+document.getElementById('cloudModal').addEventListener('click',e=>{if(e.target.id==='cloudModal')closeCloudModal();});
+
+document.getElementById('saveCloudCreds').addEventListener('click',async()=>{
+  const id=document.getElementById('cloudBinId').value.trim();
+  const key=document.getElementById('cloudKey').value.trim();
+  const msg=document.getElementById('cloudModalMsg');
+  if(!id||!key){msg.style.color='var(--red)';msg.textContent='Bitte beide Felder ausfüllen.';return;}
+  msg.style.color='var(--accent3)';msg.textContent='Teste Verbindung…';
+  // temporarily apply and test
+  saveCloudCreds(id,key);
+  const cloud=await loadCloud();
+  if(cloudStatus==='error'){
+    msg.style.color='var(--red)';
+    msg.textContent='❌ Verbindung fehlgeschlagen. Bitte Bin ID und Key prüfen.';
+    return;
+  }
+  msg.style.color='var(--green)';
+  msg.textContent='✅ Verbunden! Daten werden synchronisiert.';
+  if(cloud){
+    games=cloud;
+    nextId=games.length?Math.max(...games.map(g=>g.id))+1:1;
+    playlist.gameIds=playlist.gameIds.filter(id=>games.some(g=>g.id===id));
+    autoCleanPlaylist();
+    saveLocal(games);
+    savePlaylistLocal(playlist);
+    render();
+  }else{
+    // cloud empty → push local up
+    saveCloud(games);
+  }
+  setTimeout(closeCloudModal,1200);
+});
+
+document.getElementById('disconnectCloud').addEventListener('click',()=>{
+  if(!confirm('Cloud-Verbindung auf diesem Gerät trennen? Deine lokalen Daten bleiben erhalten.'))return;
+  clearCloudCreds();
+  setCloudStatus('notset');
+  document.getElementById('cloudModalMsg').style.color='var(--muted)';
+  document.getElementById('cloudModalMsg').textContent='Verbindung getrennt. Nur noch lokale Speicherung.';
+  document.getElementById('cloudBinId').value='';
+  document.getElementById('cloudKey').value='';
+});
+
+// ─── COVER PICKER ─────────────────────────────────────────────────────────
+// which form's cover is being edited: 'new' or 'edit'
+let coverTarget='new';
+
+function getCoverInputId(){return coverTarget==='edit'?'editCoverUrl':'newCoverUrl';}
+
+async function openCoverPicker(target){
+  if(target) coverTarget=target;
+  const modal=document.getElementById('coverPickerModal');
+  const content=document.getElementById('coverPickerContent');
+  modal.classList.remove('hidden');
+
+  // pre-fill custom URL field with current cover
+  const currentCover=document.getElementById(getCoverInputId()).value||'';
+  document.getElementById('customCoverUrl').value=currentCover;
+
+  // No RAWG id (manually created game) → only custom URL available
+  if(!currentRawgId){
+    content.className='';
+    content.innerHTML='<p style="color:var(--muted);text-align:center;padding:16px;font-size:13px;">Für dieses Spiel sind keine RAWG-Bilder verfügbar.<br>Du kannst oben eine eigene Bild-URL einfügen.</p>';
+    return;
+  }
+
+  content.className='cover-loading';
+  content.innerHTML='🔍 Lade Cover-Bilder…';
+
+  try{
+    const rawgUrl=`https://api.rawg.io/api/games/${currentRawgId}/screenshots?key=${RAWG_KEY}&page_size=20`;
+    const strategies=[
+      async()=>{const r=await fetch(rawgUrl,{signal:AbortSignal.timeout(5000)});if(!r.ok)throw new Error();return r.json();},
+      async()=>{const r=await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(rawgUrl)}`,{signal:AbortSignal.timeout(7000)});if(!r.ok)throw new Error();return r.json();},
+      async()=>{const r=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(rawgUrl)}`,{signal:AbortSignal.timeout(7000)});if(!r.ok)throw new Error();const j=await r.json();return JSON.parse(j.contents);},
+    ];
+    let data=null;
+    for(const fn of strategies){try{data=await fn();if(data)break;}catch(e){continue;}}
+
+    const images=[];
+    if(currentCover) images.push({url:currentCover,label:'Aktuelles Cover'});
+    if(data?.results){
+      data.results.forEach(s=>{ if(s.image&&!images.find(i=>i.url===s.image)) images.push({url:s.image,label:'Screenshot'}); });
+    }
+
+    if(!images.length){
+      content.className='';
+      content.innerHTML='<p style="color:var(--muted);text-align:center;padding:16px;font-size:13px;">Keine RAWG-Bilder gefunden – nutze die eigene Bild-URL oben.</p>';
+      return;
+    }
+
+    content.className='cover-grid';
+    content.innerHTML=images.map((img)=>`
+      <div class="cover-option${img.url===currentCover?' selected':''}" data-url="${esc(img.url)}" onclick="selectCover('${esc(img.url)}')">
+        <img src="${esc(img.url)}" loading="lazy" alt="${esc(img.label)}" onerror="this.parentElement.style.display='none'">
+      </div>
+    `).join('');
+
+  }catch(e){
+    content.className='';
+    content.innerHTML='<p style="color:var(--red);text-align:center;padding:16px;">Fehler beim Laden – nutze die eigene Bild-URL oben.</p>';
+  }
+}
+
+function applyCustomCover(){
+  const url=document.getElementById('customCoverUrl').value.trim();
+  if(!url){return;}
+  selectCover(url);
+}
+
+function selectCover(url){
+  document.getElementById(getCoverInputId()).value=url;
+  if(coverTarget==='edit'){
+    const img=document.getElementById('editCoverImg');
+    if(img){img.src=url;img.style.display='block';}
+  }else{
+    const p=document.getElementById('coverPreview');
+    if(p){p.src=url;p.classList.add('visible');}
+  }
+  document.querySelectorAll('.cover-option').forEach(el=>{
+    el.classList.toggle('selected',el.dataset.url===url);
+  });
+  setTimeout(()=>document.getElementById('coverPickerModal').classList.add('hidden'),400);
+}
+
+// ─── PLAYLIST EVENT WIRING ────────────────────────────────────────────────
+document.getElementById('playlistAddBtn').addEventListener('click',openPlaylistPick);
+document.getElementById('playlistRandomBtn').addEventListener('click',openPlaylistRandom);
+document.getElementById('playlistClearBtn').addEventListener('click',()=>clearPlaylist(false));
+document.getElementById('playlistPickSearch').addEventListener('input',e=>renderPlaylistPickList(e.target.value));
+document.getElementById('playlistRandomPool').addEventListener('change',updatePlaylistRandomInfo);
+document.getElementById('playlistRandomConfirm').addEventListener('click',runPlaylistRandom);
+
+// ─── INIT ─────────────────────────────────────────────────────────────────
+// Force all forms and modals closed on every load
+setAddFormOpen(false);
+['cloudModal','coverPickerModal','randomModal','editModal','detailModal','playlistPickModal','playlistRandomModal'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el)el.classList.add('hidden');
+});
+
+newPlatPicker=buildPlatPicker('newPlatPicker','newPlatInput','newPlatDrop',[]);
+editPlatPicker=buildPlatPicker('editPlatPicker','editPlatInput','editPlatDrop',[]);
+newYearPicker=buildYearPicker('newYearPicker','newYearInput','newYearDrop',[]);
+editYearPicker=buildYearPicker('editYearPicker','editYearInput','editYearDrop',[]);
+
+render(); // show local data immediately
+
+loadCloudCreds(); // try to restore saved credentials
+
+if(cloudEnabled){
+  // pull from cloud and refresh
+  (async()=>{
+    const cloud=await loadCloud();
+    if(cloud){
+      games=cloud;
+      nextId=games.length?Math.max(...games.map(g=>g.id))+1:1;
+      // playlist may have been updated by loadCloud; clean stale ids
+      playlist.gameIds=playlist.gameIds.filter(id=>games.some(g=>g.id===id));
+      autoCleanPlaylist();
+      saveLocal(games);
+      savePlaylistLocal(playlist);
+      render();
+    }
+  })();
+}else{
+  setCloudStatus('notset');
+}
+
+// re-sync from cloud when tab becomes visible again (e.g. switching from phone to PC)
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible' && cloudEnabled){
+    (async()=>{
+      const cloud=await loadCloud();
+      if(cloud){
+        games=cloud;
+        nextId=games.length?Math.max(...games.map(g=>g.id))+1:1;
+        playlist.gameIds=playlist.gameIds.filter(id=>games.some(g=>g.id===id));
+        autoCleanPlaylist();
+        saveLocal(games);
+        savePlaylistLocal(playlist);
+        render();
+      }
+    })();
+  }
+});
+
+// ─── PWA SERVICE WORKER ───────────────────────────────────────────────────
+// APP_VERSION: increment this number every time you upload a new version to GitHub.
+// This forces Firefox (and all browsers) to fetch the new sw.js and clear the old cache.
+const APP_VERSION = '1.0.9';
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', async ()=>{
+    try {
+      // Register with version in URL so browsers always detect a change
+      const reg = await navigator.serviceWorker.register(`sw.js?v=${APP_VERSION}`);
+
+      // Force immediate update check
+      reg.update();
+
+      reg.addEventListener('updatefound', ()=>{
+        const newWorker = reg.installing;
+        newWorker.addEventListener('statechange', ()=>{
+          if(newWorker.state === 'installed'){
+            if(navigator.serviceWorker.controller){
+              // New version ready — skip waiting and reload
+              newWorker.postMessage({type:'SKIP_WAITING'});
+            }
+          }
+          if(newWorker.state === 'activated'){
+            window.location.reload();
+          }
+        });
+      });
+
+      // Also reload when controller changes (catches Firefox edge cases)
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', ()=>{
+        if(!refreshing){ refreshing=true; window.location.reload(); }
+      });
+
+    } catch(e){}
+  });
+}
+</script>
+</body>
+</html>
