@@ -250,6 +250,7 @@
   .lager-tag{color:var(--accent);font-weight:600}
   .det-teil{font-size:13px;color:var(--ink-soft);margin-top:8px}
   .det-teil b{color:var(--accent)}
+  .note-pre{white-space:pre-wrap;word-break:break-word}
 </style>
 </head>
 <body>
@@ -292,9 +293,9 @@
   <div class="grab"></div>
   <h2 id="edTitle">Neuer Eintrag</h2>
   <div class="fld"><label>Name</label><input id="edName" placeholder="z. B. Chimäre"></div>
-  <div class="fld"><label>Logline (optional)</label>
+  <div class="fld" id="loglineWrap"><label id="nameLabel2">Logline (optional)</label>
     <input id="edLogline" placeholder="Ein Satz – erscheint in Liste &amp; Export"></div>
-  <div class="fld"><label>Kategorie</label>
+  <div class="fld" id="catWrap"><label>Kategorie</label>
     <input id="edCat" list="catList" placeholder="Kategorie"><datalist id="catList"></datalist>
     <div class="echips" id="catChips"></div></div>
   <div class="row2" id="subRow">
@@ -353,7 +354,7 @@
 
 <script>
 'use strict';
-const APP_VERSION='v0.9.1';
+const APP_VERSION='v0.9.2';
 const KV_BASE='https://kv-store.neuzcore.workers.dev';
 const KV_KEY='codex/data';
 const LS_DATA='codex_data', LS_SECRET='codex_secret', LS_SYNC='codex_lastsync', LS_SYNCED='codex_syncedrev';
@@ -503,12 +504,16 @@ function renderLastSync(){const t=localStorage.getItem(LS_SYNC);
 
 /* tree helpers */
 const CHAPTER='Kapitel';
-function allCats(){   // für Export: alles, Kapitel ans Ende
+const NOTES='Notizen';
+const SPECIAL=[CHAPTER,NOTES];
+function allCats(){   // für Export: Lore alphabetisch, dann Notizen, dann Kapitel
   const c=[...new Set(state.entries.map(e=>e.kategorie))].sort((a,b)=>a.localeCompare(b,'de'));
-  return [...c.filter(x=>x!==CHAPTER),...c.filter(x=>x===CHAPTER)];
+  const lore=c.filter(x=>!SPECIAL.includes(x));
+  const tail=[NOTES,CHAPTER].filter(x=>c.includes(x));
+  return [...lore,...tail];
 }
-function navCats(){   // für Navigation/Liste: ohne Kapitel
-  return [...new Set(state.entries.map(e=>e.kategorie))].filter(c=>c!==CHAPTER).sort((a,b)=>a.localeCompare(b,'de'));
+function navCats(){   // für Navigation/Liste: ohne Kapitel & Notizen
+  return [...new Set(state.entries.map(e=>e.kategorie))].filter(c=>!SPECIAL.includes(c)).sort((a,b)=>a.localeCompare(b,'de'));
 }
 function orderedCats(){return navCats();}
 function orderedSubs(cat){
@@ -524,13 +529,16 @@ const countSub=(c,s)=>state.entries.filter(e=>e.kategorie===c&&(e.unterkategorie
 function renderNav(){
   const nav=$('#nav');let h='';
   const datedCount=state.entries.filter(e=>effectiveYear(e)).length;
-  const loreCount=state.entries.filter(e=>e.kategorie!==CHAPTER).length;
+  const loreCount=state.entries.filter(e=>!SPECIAL.includes(e.kategorie)).length;
   const kapCount=countCat(CHAPTER);
+  const notesCount=countCat(NOTES);
   const allOn=sel.cat===''&&sel.view==='';
   h+=`<div class="nav-item ${allOn?'on':''}" data-cat="" data-sub="">
         <span class="caret none"></span>Alle Einträge<span class="cnt">${loreCount}</span></div>`;
   if(kapCount)h+=`<div class="nav-item ${sel.cat===CHAPTER?'on':''}" data-cat="${CHAPTER}" data-sub="">
         <span class="caret none"></span>Kapitelübersicht<span class="cnt">${kapCount}</span></div>`;
+  if(notesCount)h+=`<div class="nav-item ${sel.cat===NOTES?'on':''}" data-cat="${NOTES}" data-sub="">
+        <span class="caret none"></span>Notizen<span class="cnt">${notesCount}</span></div>`;
   h+=`<div class="nav-divider"></div>`;
   h+=`<div class="nav-item ${sel.view==='recent'?'on':''}" data-view="recent">
         <span class="caret none"></span>Zuletzt geändert</div>`;
@@ -593,7 +601,7 @@ function baseFilter(){
   const q=$('#q').value.trim().toLowerCase();
   let items=state.entries.slice();
   if(sel.cat)items=items.filter(e=>e.kategorie===sel.cat);
-  else if(!q)items=items.filter(e=>e.kategorie!==CHAPTER);  // Kapitel haben eigene Ansicht
+  else if(!q)items=items.filter(e=>!SPECIAL.includes(e.kategorie));  // Kapitel & Notizen haben eigene Ansichten
   if(sel.sub)items=items.filter(e=>(e.unterkategorie||'')===sel.sub);
   if(sel.lager)items=items.filter(e=>e.lager===sel.lager);
   if(q)items=items.filter(e=>(e.name+' '+e.text+' '+e.kategorie+' '+(e.unterkategorie||'')+' '+(e.lager||'')+' '+(e.teilVon||'')).toLowerCase().includes(q));
@@ -608,6 +616,11 @@ function sortItems(items){
   });
 }
 function cardHTML(e,extra){
+  if(e.kategorie===NOTES){
+    const snip=(e.text||'').replace(/^-\s+/gm,'').replace(/\n+/g,' ').replace(/\*/g,'').trim();
+    return `<div class="card" data-id="${e.id}"><div class="top"><div class="nm">${esc(e.name)}</div></div>
+      ${snip?`<div class="snip">${esc(snip)}</div>`:''}${extra||''}</div>`;
+  }
   const kap=e.kategorie===CHAPTER&&e.kapitel?`<span class="kap">${e.kapitel}</span>`:'';
   const badge=e.kategorie===CHAPTER&&e.status?`<span class="badge ${statusClass(e.status)}">${esc(e.status)}</span>`:'';
   const right=kap||badge?`<div style="display:flex;gap:8px;align-items:center;flex:0 0 auto">${badge}${kap}</div>`:'';
@@ -629,6 +642,8 @@ function crumbHTML(count){
     return `<div class="crumb">Lager: ${esc(sel.lager)}<span class="cnt">${count}</span></div>`;
   if(sel.cat===CHAPTER)
     return `<div class="crumb">Kapitelübersicht<span class="cnt">${count}</span></div>`;
+  if(sel.cat===NOTES)
+    return `<div class="crumb">Notizen<span class="cnt">${count}</span></div>`;
   if(!sel.cat)
     return `<div class="crumb">Alle Einträge<span class="cnt">${count}</span></div>`;
   let p=`<span class="cl" data-root="1">Alle Einträge</span> <span class="sep">›</span> `;
@@ -660,11 +675,12 @@ function renderList(){
     for(const s of orderedSubs(sel.cat)){
       const grp=sortItems(items.filter(e=>(e.unterkategorie||'')===s));
       if(!grp.length)continue;
-      if(sel.cat!==CHAPTER)body+=`<div class="grp-h">${s?`<span class="gh" data-gsub="${esc(s)}">${esc(s)}</span>`:'Ohne Unterkategorie'}<span class="l"></span></div>`;
+      if(!SPECIAL.includes(sel.cat))body+=`<div class="grp-h">${s?`<span class="gh" data-gsub="${esc(s)}">${esc(s)}</span>`:'Ohne Unterkategorie'}<span class="l"></span></div>`;
       body+=grp.map(e=>cardHTML(e)).join('');
     }
   } else if(!sel.cat){
-    const cats=[...navCats(),...(items.some(e=>e.kategorie===CHAPTER)?[CHAPTER]:[])];
+    const tail=[NOTES,CHAPTER].filter(c=>items.some(e=>e.kategorie===c));
+    const cats=[...navCats(),...tail];
     for(const c of cats){
       const grp=sortItems(items.filter(e=>e.kategorie===c));
       if(!grp.length)continue;
@@ -766,6 +782,12 @@ function render(){renderNav();renderList();$('#statCount').textContent=state.ent
 /* detail */
 function openDetail(id){
   const e=state.entries.find(x=>x.id===id);if(!e)return;editingId=id;
+  if(e.kategorie===NOTES){
+    $('#detBody').innerHTML=`<div class="det-cat">Notiz</div>
+      <div class="det-nm">${esc(e.name)}</div>
+      <div class="det-body note-pre">${esc(e.text)||'<em>Kein Text.</em>'}</div>`;
+    openSheet('sheetDetail');return;
+  }
   const kap=e.kategorie===CHAPTER&&e.kapitel?` · Kap. ${e.kapitel}`:'';
   const sub=e.unterkategorie?` › ${esc(e.unterkategorie)}`:'';
   const jahr=e.jahr&&e.jahr.trim()?` · ${esc(e.jahr.trim())}`:'';
@@ -786,12 +808,14 @@ function fillSubList(cat){
   $('#subList').innerHTML=[...known].map(s=>`<option value="${esc(s)}">`).join('');
 }
 function toggleFields(){
-  const cat=$('#edCat').value.trim();const isKap=cat==='Kapitel';
+  const cat=$('#edCat').value.trim();const isKap=cat===CHAPTER;const isNote=cat===NOTES;
+  const lore=!isKap&&!isNote;
   $('#kapWrap').style.display=isKap?'block':'none';
-  $('#subRow').style.display=isKap?'none':'flex';
-  $('#subHint').style.display=isKap?'none':'block';
-  $('#lagerWrap').style.display=isKap?'none':'block';
-  $('#teilVonWrap').style.display=isKap?'none':'block';
+  $('#subRow').style.display=lore?'flex':'none';
+  $('#subHint').style.display=lore?'block':'none';
+  $('#lagerWrap').style.display=lore?'block':'none';
+  $('#teilVonWrap').style.display=lore?'block':'none';
+  $('#loglineWrap').style.display=isNote?'none':'block';
   fillSubList(cat);renderSubChips();fillTeilVonList();renderLagerChips();if(isKap)renderStatusChips();
 }
 let edStatus='',edLager='';
@@ -826,14 +850,14 @@ function openEditor(id){
   editingId=id||null;fillCatList();
   if(id){
     const e=state.entries.find(x=>x.id===id);
-    $('#edTitle').textContent='Eintrag bearbeiten';
+    $('#edTitle').textContent=e.kategorie===NOTES?'Notiz bearbeiten':'Eintrag bearbeiten';
     $('#edName').value=e.name;$('#edCat').value=e.kategorie;$('#edSub').value=e.unterkategorie||'';
     $('#edLogline').value=e.logline||'';$('#edJahr').value=e.jahr||'';
     $('#edTeilVon').value=e.teilVon||'';edLager=e.lager||'';
     $('#edText').value=e.text;$('#edKap').value=e.kapitel||'';edStatus=e.status||'';
     $('#edDelete').style.display='block';
   }else{
-    $('#edTitle').textContent='Neuer Eintrag';
+    $('#edTitle').textContent=sel.cat===NOTES?'Neue Notiz':'Neuer Eintrag';
     $('#edName').value='';$('#edCat').value=sel.cat||'';$('#edSub').value=sel.sub||'';
     $('#edLogline').value='';$('#edJahr').value='';
     $('#edTeilVon').value='';edLager=sel.lager||'';
@@ -844,13 +868,13 @@ function openEditor(id){
 function saveEdit(){
   const name=$('#edName').value.trim(),cat=$('#edCat').value.trim();
   if(!name){toast('Name fehlt');return;} if(!cat){toast('Kategorie fehlt');return;}
-  const isKap=cat==='Kapitel';
-  const sub=isKap?'':$('#edSub').value.trim();
-  const jahr=isKap?'':$('#edJahr').value.trim();
-  const logline=$('#edLogline').value.trim();
+  const isKap=cat===CHAPTER;const isNote=cat===NOTES;const lore=!isKap&&!isNote;
+  const sub=lore?$('#edSub').value.trim():'';
+  const jahr=lore?$('#edJahr').value.trim():'';
+  const logline=isNote?'':$('#edLogline').value.trim();
   const status=isKap?edStatus:'';
-  const lager=isKap?'':edLager;
-  const teilVon=isKap?'':$('#edTeilVon').value.trim();
+  const lager=lore?edLager:'';
+  const teilVon=lore?$('#edTeilVon').value.trim():'';
   const text=$('#edText').value;
   const kap=isKap?(parseInt($('#edKap').value)||null):null;
   if(editingId){

@@ -1,5 +1,5 @@
 /* Codex Service Worker */
-const CACHE = 'codex-v10';               // bei jedem Deploy hochzählen: codex-v4, v5 …
+const CACHE = 'codex-v11';               // bei jedem Deploy hochzählen: codex-v4, v5 …
 const ASSETS = [
   './codex.html',
   './manifest.json',
