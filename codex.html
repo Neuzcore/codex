@@ -353,7 +353,7 @@
 
 <script>
 'use strict';
-const APP_VERSION='v0.9';
+const APP_VERSION='v0.9.1';
 const KV_BASE='https://kv-store.neuzcore.workers.dev';
 const KV_KEY='codex/data';
 const LS_DATA='codex_data', LS_SECRET='codex_secret', LS_SYNC='codex_lastsync', LS_SYNCED='codex_syncedrev';
@@ -375,6 +375,7 @@ let state={entries:[],trash:[]};
 let sel={cat:'',sub:'',view:'',lager:''};   // view: '' | 'recent' | 'timeline' | 'trash'; lager: Fraktionsfilter
 let sortMode='name';
 let kapFilter='';   // Statusfilter in der Kapitelübersicht
+let migrationDirty=false;
 let expanded=new Set();
 let editingId=null;
 
@@ -401,6 +402,7 @@ function inl(s){return esc(s).replace(/\*([^*]+)\*/g,'<em>$1</em>');}
 const KAP_STATUS=['geplant','in Arbeit','geschrieben','überarbeitet'];
 function statusClass(s){return {'geplant':'st-plan','in Arbeit':'st-work','geschrieben':'st-done','überarbeitet':'st-rev'}[s]||'';}
 function migrate(){
+  migrationDirty=false;
   if(!Array.isArray(state.trash))state.trash=[];
   for(const e of state.entries){
     if(e.unterkategorie===undefined)e.unterkategorie='';
@@ -424,6 +426,7 @@ function migrate(){
       'Die Resonanz':'Resonanz','Aeterna Prime':'Hegemonie'};
     for(const e of state.entries)if(!e.lager && seed[e.name])e.lager=seed[e.name];
     state.v9lager=true;
+    migrationDirty=true;               // Migration soll hochgeladen werden
   }
   if(!state.rev)state.rev=new Date().toISOString();
 }
@@ -451,50 +454,42 @@ async function save(){markChange();saveLocal();render();pushRemote();}
 function secret(){return localStorage.getItem(LS_SECRET)||'';}
 function setSync(cls,txt){$('#syncPill').className='sync '+cls;$('#syncTxt').textContent=txt;}
 function adoptRemote(d){
-  state=d;migrate();
-  state.rev=d.rev||nowRev();
-  setSynced(state.rev);saveLocal();render();
+  state=d;migrationDirty=false;migrate();
+  if(migrationDirty){                 // Cloud war noch nicht migriert -> lokal aufwerten und hochladen
+    state.rev=nowRev();saveLocal();render();pushRemote();
+  }else{
+    state.rev=d.rev||nowRev();setSynced(state.rev);saveLocal();render();
+  }
 }
 async function pullRemote(silent){
   const s=secret();if(!s){setSync('','Lokal');return;}
   setSync('busy','Sync…');
   try{
     const r=await fetch(`${KV_BASE}/${KV_KEY}`,{headers:{'Authorization':'Bearer '+s}});
-    if(r.status===404){await pushRemote(true);return;}
+    if(r.status===404){await pushRemote();return;}
     if(!r.ok)throw new Error('HTTP '+r.status);
     const d=await r.json();
     if(!d||!Array.isArray(d.entries)){setSync('ok','Synchron');return;}
     const rrev=d.rev||'';
-    if(rrev && rrev===getSynced()){                 // Cloud unverändert seit letztem Abgleich
-      setSync(hasLocalChanges()?'warn':'ok',hasLocalChanges()?'Nicht hochgeladen':'Synchron');
+    const cloudMoved=rrev && rrev!==getSynced() && rrev!==state.rev;
+    if(hasLocalChanges() && cloudMoved){          // echter Ausnahmefall: beide Seiten geändert
+      if(silent){setSync('warn','Abgleich nötig');return;}
+      const ov=confirm('⚠ Cloud und lokale Daten weichen ab – Änderung auf einem anderen Gerät.\n\nOK = Cloud übernehmen (lokale Änderungen verwerfen)\nAbbrechen = lokale Version hochladen');
+      if(ov){adoptRemote(d);stamp();setSync('ok','Synchron');toast('Cloud übernommen');}
+      else{await pushRemote();toast('Lokale Version hochgeladen');}
       return;
     }
-    if(hasLocalChanges()){                           // beide Seiten geändert -> Konflikt
-      if(silent){setSync('warn','Abgleich nötig');return;}
-      const ov=confirm('⚠ Cloud und lokale Daten weichen voneinander ab (Änderung auf einem anderen Gerät).\n\nOK = Cloud übernehmen und lokale Änderungen verwerfen\nAbbrechen = lokale Version behalten (später über „Sync“ hochladen)');
-      if(ov){adoptRemote(d);stamp();setSync('ok','Synchron');toast('Cloud übernommen');}
-      else{setSync('warn','Abgleich nötig');}
-      return;
+    if(hasLocalChanges()){                          // lokal voraus, Cloud unverändert -> still hochladen
+      await pushRemote();return;
     }
     adoptRemote(d);stamp();setSync('ok','Synchron');if(!silent)toast('Aus der Cloud geladen');
   }catch(e){setSync('err','Fehler');if(!silent)toast('Sync-Fehler: '+e.message);}
 }
-async function pushRemote(forceInitial){
+async function pushRemote(){
   const s=secret();if(!s){setSync('','Lokal');return;}
   if(!state.rev)state.rev=nowRev();
   setSync('busy','Sync…');
   try{
-    // Erst prüfen, ob die Cloud seit unserem letzten Abgleich fortgeschritten ist
-    if(!forceInitial){
-      const chk=await fetch(`${KV_BASE}/${KV_KEY}`,{headers:{'Authorization':'Bearer '+s}});
-      if(chk.ok){
-        const cd=await chk.json();const crev=(cd&&cd.rev)||'';
-        if(crev && crev!==getSynced() && crev!==state.rev){
-          const ov=confirm('⚠ Die Cloud wurde auf einem anderen Gerät geändert.\n\nOK = Deine Version hochladen und die Cloud überschreiben\nAbbrechen = nicht hochladen (Cloud bleibt; über „Sync“ laden)');
-          if(!ov){setSync('warn','Abgleich nötig');return;}
-        }
-      }
-    }
     state.version=6;state.app='codex';state.exported=new Date().toISOString();
     const r=await fetch(`${KV_BASE}/${KV_KEY}`,{method:'PUT',
       headers:{'Authorization':'Bearer '+s,'Content-Type':'application/json'},body:JSON.stringify(state)});
@@ -1017,8 +1012,8 @@ function initEvents(){
 
 /* boot */
 $('#verTxt').textContent=APP_VERSION;$('#verFoot').textContent=APP_VERSION;
-loadLocal();initEvents();render();renderSecretState();renderLastSync();
-if(secret())pullRemote(true);else setSync('','Lokal');
+migrationDirty=false;loadLocal();initEvents();render();renderSecretState();renderLastSync();
+if(secret()){ if(migrationDirty)pushRemote(); else pullRemote(true); } else setSync('','Lokal');
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw-codex.js').catch(()=>{});
 </script>
 </body>
